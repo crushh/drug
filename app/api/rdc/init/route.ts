@@ -1,11 +1,18 @@
 ﻿import { NextResponse } from "next/server";
 
-import { listStatusDict } from "@/lib/data-access";
+import { listStatusDict } from "@/lib/rdc-data";
+import { serverError } from "@/lib/http";
 
-export function GET() {
-  return NextResponse.json({
-    dicts: {
-      status: listStatusDict(),
-    },
-  });
+export async function GET() {
+  try {
+    const status = await listStatusDict();
+    return NextResponse.json({
+      dicts: {
+        status,
+      },
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Internal server error";
+    return serverError(message);
+  }
 }
