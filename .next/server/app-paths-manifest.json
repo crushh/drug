@@ -1,4 +1,0 @@
-{
-  "/page": "app/page.js",
-  "/api/chemical/[entity_category]/[entity_id]/route": "app/api/chemical/[entity_category]/[entity_id]/route.js"
-}
