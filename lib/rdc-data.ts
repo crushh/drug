@@ -465,7 +465,7 @@ function mapEfficacy(row: RowDataPacket) {
 async function fetchInVitro(drugId: string) {
   const pool = getPool();
   const [studies] = await pool.query<RowDataPacket[]>(
-    `SELECT in_vitro_id, study_overview, notes
+    `SELECT in_vitro_id, study_overview
      FROM in_vitro
      WHERE drug_id = ?
      ORDER BY created_at ASC, id ASC`,
@@ -497,7 +497,6 @@ async function fetchInVitro(drugId: string) {
     studies: studies.map((study) => ({
       in_vitro_id: study.in_vitro_id as string,
       study_overview: (study.study_overview as string) ?? null,
-      notes: (study.notes as string) ?? null,
     })),
     ...Object.fromEntries(measurementGroups.entries()),
   };
@@ -523,4 +522,141 @@ function groupBy(rows: RowDataPacket[], getter: (row: RowDataPacket) => string) 
     map.get(key)!.push(row);
   }
   return map;
+}
+
+export type EntityCategory = "compound" | "ligand" | "linker" | "chelator" | "radionuclide";
+
+export interface ChemicalDetailOptions {
+  includeActivity?: boolean;
+}
+
+export function validateEntityCategory(value: string): value is EntityCategory {
+  return ENTITY_CATEGORIES.includes(value as EntityCategory);
+}
+
+export async function getChemicalDetail(
+  entityCategory: EntityCategory,
+  entityId: string,
+  options: ChemicalDetailOptions = {}
+) {
+  const pool = getPool();
+  const includeActivity = options.includeActivity ?? true;
+
+  // 查询化学实体基础信息
+  const [rows] = await pool.query<RowDataPacket[]>(
+    `SELECT
+       entity_category,
+       entity_id,
+       name,
+       synonyms,
+       smiles,
+       formula,
+       structure_image,
+       mol2d_path,
+       mol3d_path,
+       pubchem_cid,
+       inchi,
+       inchikey,
+       iupac_name,
+       molecular_weight,
+       complexity,
+       heavy_atom_count,
+       hbond_acceptors,
+       hbond_donors,
+       rotatable_bonds,
+       logp,
+       tpsa,
+       linker_type,
+       radionuclide_symbol,
+       radionuclide_half_life,
+       radionuclide_emission,
+       radionuclide_energy
+     FROM chemical_entity
+     WHERE entity_category = ? AND entity_id = ?
+     LIMIT 1`,
+    [entityCategory, entityId]
+  );
+
+  if (rows.length === 0) {
+    return undefined;
+  }
+
+  const row = rows[0];
+  const basic = {
+    entity_category: row.entity_category as string,
+    entity_id: row.entity_id as string,
+    name: (row.name as string) ?? null,
+    synonyms: (row.synonyms as string) ?? null,
+    smiles: (row.smiles as string) ?? null,
+    formula: (row.formula as string) ?? null,
+    structure_image: (row.structure_image as string) ?? null,
+    mol2d_path: (row.mol2d_path as string) ?? null,
+    mol3d_path: (row.mol3d_path as string) ?? null,
+    pubchem_cid: (row.pubchem_cid as string) ?? null,
+    inchi: (row.inchi as string) ?? null,
+    inchikey: (row.inchikey as string) ?? null,
+    iupac_name: (row.iupac_name as string) ?? null,
+    molecular_weight: toNumber(row.molecular_weight),
+    complexity: toNumber(row.complexity),
+    heavy_atom_count: toNumber(row.heavy_atom_count),
+    hbond_acceptors: toNumber(row.hbond_acceptors),
+    hbond_donors: toNumber(row.hbond_donors),
+    rotatable_bonds: toNumber(row.rotatable_bonds),
+    logp: toNumber(row.logp),
+    tpsa: toNumber(row.tpsa),
+    linker_type: (row.linker_type as string) ?? null,
+    radionuclide_symbol: (row.radionuclide_symbol as string) ?? null,
+    radionuclide_half_life: (row.radionuclide_half_life as string) ?? null,
+    radionuclide_emission: (row.radionuclide_emission as string) ?? null,
+    radionuclide_energy: (row.radionuclide_energy as string) ?? null,
+  };
+
+  if (!includeActivity) {
+    return { basic };
+  }
+
+  // 查找使用该化学实体的所有药物
+  const [relatedDrugRows] = await pool.query<RowDataPacket[]>(
+    `SELECT DISTINCT drug_id
+     FROM drug_chemical_rel
+     WHERE chemical_entity_id = ?
+     ORDER BY drug_id`,
+    [entityId]
+  );
+
+  const drugIds = relatedDrugRows.map((r) => r.drug_id as string);
+
+  if (drugIds.length === 0) {
+    return { basic, rdc_activity: [] };
+  }
+
+  // 为每个关联的药物获取完整的活性数据
+  const rdcActivity = [];
+  for (const drugId of drugIds) {
+    const detail = await getDrugDetail(drugId, {
+      expand: new Set(["chemicals", "human_activity", "animal_in_vivo", "in_vitro"]),
+      allEntities: true,
+    });
+
+    if (detail) {
+      const general = detail.general as {
+        drug_id: string;
+        drug_name: string;
+        status: string | null;
+        type: string | null;
+      };
+
+      rdcActivity.push({
+        drug_id: general.drug_id,
+        drug_name: general.drug_name,
+        status: general.status ?? null,
+        type: general.type ?? null,
+        human_activity: detail.human_activity ?? [],
+        animal_in_vivo: detail.animal_in_vivo ?? { studies: [] },
+        in_vitro: detail.in_vitro ?? {},
+      });
+    }
+  }
+
+  return { basic, rdc_activity: rdcActivity };
 }

@@ -1,10 +1,14 @@
 ﻿import { NextRequest, NextResponse } from "next/server";
 
-import { getChemicalDetail, validateEntityCategory } from "@/lib/data-access";
 import { notFound, validationError } from "@/lib/http";
 import { parseBooleanParam } from "@/lib/query";
+import {
+  type EntityCategory,
+  getChemicalDetail,
+  validateEntityCategory,
+} from "@/lib/rdc-data";
 
-export function GET(
+export async function GET(
   request: NextRequest,
   context: { params: { entity_category: string; entity_id: string } }
 ) {
@@ -25,11 +29,27 @@ export function GET(
     true
   );
 
-  const detail = getChemicalDetail(categoryParam, entityId, { includeActivity });
+  try {
+    const detail = await getChemicalDetail(categoryParam as EntityCategory, entityId, {
+      includeActivity,
+    });
 
-  if (!detail) {
-    return notFound(`未找到化学实体 ${entityId}`);
+    if (!detail) {
+      return notFound(`未找到化学实体 ${entityId}`);
+    }
+
+    return NextResponse.json(detail);
+  } catch (error) {
+    console.error("获取化学实体详情失败:", error);
+    return NextResponse.json(
+      {
+        error: {
+          code: "SERVER_ERROR",
+          message: "获取化学实体详情失败",
+          details: [],
+        },
+      },
+      { status: 500 }
+    );
   }
-
-  return NextResponse.json(detail);
 }
