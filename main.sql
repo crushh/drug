@@ -310,23 +310,24 @@ CREATE TABLE IF NOT EXISTS `animal_in_vivo_biodist` (
     ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='动物体内研究生物分布明细';
 
-CREATE TABLE IF NOT EXISTS `animal_in_vivo_pk` (
-  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '自增主键（明细记录）',
-  `study_ref_id` VARCHAR(128) NOT NULL COMMENT 'Business ID (animal_in_vivo_study.study_id)',
-  `pk_animal_model` VARCHAR(255) DEFAULT NULL COMMENT 'PK 研究使用的动物模型',
-  `pk_dosage_symbols` VARCHAR(16) DEFAULT NULL COMMENT 'PK 剂量比较符号',
-  `pk_dosage_value` DECIMAL(12,4) DEFAULT NULL COMMENT 'PK 剂量数值',
-  `pk_dosage_unit` VARCHAR(32) DEFAULT NULL COMMENT 'PK 剂量单位',
-  `pk_description` TEXT DEFAULT NULL COMMENT 'PK 结果描述说明',
-  `half_life` VARCHAR(255) DEFAULT NULL COMMENT '半衰期值',
-  `pk_image` VARCHAR(512) DEFAULT NULL COMMENT 'PK 结果图像路径',
-  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '记录创建时间',
-  `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '记录更新时间',
-  PRIMARY KEY (`id`),
-  INDEX `idx_pk_study` (`study_ref_id`),
-  CONSTRAINT `fk_pk_study` FOREIGN KEY (`study_ref_id`) REFERENCES `animal_in_vivo_study`(`study_id`)
-    ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='动物体内研究 PK 明细';
+--- pk 研究表暂时不需要，先注释掉
+-- CREATE TABLE IF NOT EXISTS `animal_in_vivo_pk` (
+--   `id` INT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '自增主键（明细记录）',
+--   `study_ref_id` VARCHAR(128) NOT NULL COMMENT 'Business ID (animal_in_vivo_study.study_id)',
+--   `pk_animal_model` VARCHAR(255) DEFAULT NULL COMMENT 'PK 研究使用的动物模型',
+--   `pk_dosage_symbols` VARCHAR(16) DEFAULT NULL COMMENT 'PK 剂量比较符号',
+--   `pk_dosage_value` DECIMAL(12,4) DEFAULT NULL COMMENT 'PK 剂量数值',
+--   `pk_dosage_unit` VARCHAR(32) DEFAULT NULL COMMENT 'PK 剂量单位',
+--   `pk_description` TEXT DEFAULT NULL COMMENT 'PK 结果描述说明',
+--   `half_life` VARCHAR(255) DEFAULT NULL COMMENT '半衰期值',
+--   `pk_image` VARCHAR(512) DEFAULT NULL COMMENT 'PK 结果图像路径',
+--   `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '记录创建时间',
+--   `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '记录更新时间',
+--   PRIMARY KEY (`id`),
+--   INDEX `idx_pk_study` (`study_ref_id`),
+--   CONSTRAINT `fk_pk_study` FOREIGN KEY (`study_ref_id`) REFERENCES `animal_in_vivo_study`(`study_id`)
+--     ON DELETE CASCADE ON UPDATE CASCADE
+-- ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='动物体内研究 PK 明细';
 
 CREATE TABLE IF NOT EXISTS `animal_in_vivo_efficacy` (
   `id` INT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '自增主键（明细记录）',

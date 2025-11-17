@@ -18,7 +18,7 @@ export interface DrugDetailOptions {
   allEntities?: boolean;
 }
 
-const ENTITY_CATEGORIES = ["compound", "ligand", "linker", "chelator", "radionuclide"] as const;
+const ENTITY_CATEGORIES = ["cold_compound", "ligand", "linker", "chelator", "radionuclide"] as const;
 
 function toNumber(value: unknown): number | null {
   if (value === null || value === undefined) {
@@ -292,7 +292,7 @@ async function buildChemicalBlock(drugId: string, allEntities: boolean) {
   );
 
   const summary: Record<string, string | null> = {
-    compound: null,
+    cold_compound: null,
     ligand: null,
     linker: null,
     chelator: null,
@@ -300,7 +300,7 @@ async function buildChemicalBlock(drugId: string, allEntities: boolean) {
   };
 
   const grouped: Record<string, Array<{ entity_id: string; name: string; relation_role?: string }>> = {
-    compound: [],
+    cold_compound: [],
     ligand: [],
     linker: [],
     chelator: [],
@@ -308,6 +308,7 @@ async function buildChemicalBlock(drugId: string, allEntities: boolean) {
   };
 
   for (const row of rows) {
+    console.log(row);
     const category = String(row.relation_role ?? "").toLowerCase();
     if (!ENTITY_CATEGORIES.includes(category as (typeof ENTITY_CATEGORIES)[number])) {
       continue;
@@ -323,7 +324,7 @@ async function buildChemicalBlock(drugId: string, allEntities: boolean) {
   }
 
   const block: Record<string, unknown> = {
-    compound_name: summary.compound,
+    compound_name: summary.cold_compound,
     ligand_name: summary.ligand,
     linker_name: summary.linker,
     chelator_name: summary.chelator,
@@ -524,7 +525,7 @@ function groupBy(rows: RowDataPacket[], getter: (row: RowDataPacket) => string) 
   return map;
 }
 
-export type EntityCategory = "compound" | "ligand" | "linker" | "chelator" | "radionuclide";
+export type EntityCategory = "cold_compound" | "ligand" | "linker" | "chelator" | "radionuclide";
 
 export interface ChemicalDetailOptions {
   includeActivity?: boolean;

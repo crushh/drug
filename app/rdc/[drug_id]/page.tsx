@@ -54,6 +54,10 @@ type Detail = {
         pk_dosage_value: number | null;
         pk_dosage_unit: string | null;
         half_life: string | null;
+        half_life_value?: number | null;
+        half_life_unit?: string | null;
+        pk_result?: string | null;
+        pk_image?: string | null;
         pk_description: string | null;
       }>;
       biodistribution: Array<{
@@ -153,10 +157,10 @@ export default function DrugDetailPage({ params }: { params: { drug_id: string }
             <li><strong>drug_name</strong>: {g.drug_name}</li>
             <li><strong>drug_synonyms</strong>: {g.drug_synonyms ?? "-"}</li>
             <li><strong>status</strong>: {g.status ?? "-"}</li>
-            <li><strong>type</strong>: {g.type ?? "-"}</li>
+            {/* <li><strong>type</strong>: {g.type ?? "-"}</li> */}
             <li><strong>smiles</strong>: {g.smiles ?? "-"}</li>
             <li><strong>structure_image</strong>: {g.structure_image ?? "-"}</li>
-            <li style={{ color: "#16a34a" }}>compound Name: {c?.compound_name ?? "-"}</li>
+            <li>cold compound Name: {c?.compound_name ?? "-"}</li>
             <li>ligand Name: {c?.ligand_name ?? "-"}</li>
             <li>linker Name: {c?.linker_name ?? "-"}</li>
             <li>chelator Name: {c?.chelator_name ?? "-"}</li>
@@ -251,37 +255,59 @@ export default function DrugDetailPage({ params }: { params: { drug_id: string }
         {openAnimal && (
           <div style={{ display: "grid", gap: 14, marginTop: 12 }}>
             {/* PK */}
-            <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 10, overflowX: "auto" }}>
-              <div style={{ padding: "8px 10px", fontWeight: 600 }}>Related Pharmacokinetics (PK)</div>
-              <table style={{ width: "100%", borderCollapse: "separate", borderSpacing: 0 }}>
-                <thead>
-                  <tr>
-                    <th style={{ textAlign: "left", padding: 8, borderBottom: "1px solid #e5e7eb" }}>animal_model</th>
-                    <th style={{ textAlign: "left", padding: 8, borderBottom: "1px solid #e5e7eb" }}>dosage_symbols</th>
-                    <th style={{ textAlign: "left", padding: 8, borderBottom: "1px solid #e5e7eb" }}>dosage_value</th>
-                    <th style={{ textAlign: "left", padding: 8, borderBottom: "1px solid #e5e7eb" }}>dosage_unit</th>
-                    <th style={{ textAlign: "left", padding: 8, borderBottom: "1px solid #e5e7eb" }}>half_life</th>
-                    <th style={{ textAlign: "left", padding: 8, borderBottom: "1px solid #e5e7eb" }}>pk_description</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {(animal?.studies ?? []).flatMap((s) => s.pk).map((row, idx) => (
-                    <tr key={idx}>
-                      <td style={{ padding: 8, borderTop: "1px dashed #e5e7eb" }}>{row.pk_animal_model ?? "-"}</td>
-                      <td style={{ padding: 8, borderTop: "1px dashed #e5e7eb" }}>{row.pk_dosage_symbols ?? "-"}</td>
-                      <td style={{ padding: 8, borderTop: "1px dashed #e5e7eb" }}>{row.pk_dosage_value ?? "-"}</td>
-                      <td style={{ padding: 8, borderTop: "1px dashed #e5e7eb" }}>{row.pk_dosage_unit ?? "-"}</td>
-                      <td style={{ padding: 8, borderTop: "1px dashed #e5e7eb" }}>{row.half_life ?? "-"}</td>
-                      <td style={{ padding: 8, borderTop: "1px dashed #e5e7eb" }}>{row.pk_description ?? "-"}</td>
-                    </tr>
-                  ))}
-                  {(!animal || (animal.studies ?? []).every((s) => (s.pk ?? []).length === 0)) && (
-                    <tr>
-                      <td colSpan={6} style={{ padding: 12, color: "#64748b" }}>No PK data.</td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
+            <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 10 }}>
+              <div style={{ padding: "8px 10px", fontWeight: 600 }}>Realted Pharmacokinetics (PK)</div>
+              <div style={{ padding: 10, display: "grid", gap: 10 }}>
+                {(animal?.studies ?? []).flatMap((s) => s.pk).map((row, idx) => {
+                  const dosage = (() => {
+                    const parts = [
+                      (row as any).pk_dosage_symbols ?? undefined,
+                      (row as any).pk_dosage_value == null ? undefined : String((row as any).pk_dosage_value),
+                      (row as any).pk_dosage_unit ?? undefined,
+                    ].filter((v) => typeof v === 'string' ? v.trim().length > 0 : v !== undefined) as string[];
+                    return parts.length > 0 ? parts.join(' ') : '-';
+                  })();
+
+                  const halfLife = (() => {
+                    const parts = [
+                      (row as any).half_life_value == null ? undefined : String((row as any).half_life_value),
+                      (row as any).half_life_unit ?? undefined,
+                    ].filter((v) => typeof v === 'string' ? v.trim().length > 0 : v !== undefined) as string[];
+                    const combined = parts.length > 0 ? parts.join(' ') : undefined;
+                    return combined ?? (row as any).half_life ?? '-';
+                  })();
+
+                  const pkResultPath = (() => {
+                    const raw = (row as any).pk_result ?? (row as any).pk_image ?? null;
+                    if (!raw || typeof raw !== 'string') return '-';
+                    const name = raw.split('/').filter(Boolean).pop() ?? raw;
+                    return `domain/file/${name}`;
+                  })();
+
+                  return (
+                    <div key={idx} style={{ border: "1px dashed #f59e0b", borderRadius: 10, padding: 10, display: 'grid', gridTemplateColumns: 'auto 1fr auto 1fr auto 1fr', columnGap: 12, rowGap: 10 }}>
+                      {/* Row 2: labels + values */}
+                      <div style={{ color: '#16a34a', fontWeight: 600 }}>Animal model</div>
+                      <div style={{ minWidth: 0, wordBreak: 'break-word' }}>{row.pk_animal_model ?? '-'}</div>
+                      <div style={{ color: '#16a34a', fontWeight: 600 }}>Dosage</div>
+                      <div style={{ minWidth: 0, wordBreak: 'break-word' }}>{dosage}</div>
+                      <div style={{ color: '#16a34a', fontWeight: 600 }}>Half Life</div>
+                      <div style={{ minWidth: 0, wordBreak: 'break-word' }}>{halfLife}</div>
+
+                      {/* Row 3: PK_Result */}
+                      <div style={{ color: '#16a34a', fontWeight: 600, gridColumn: '1 / span 1' }}>PK_Result</div>
+                      <div style={{ gridColumn: '2 / 7', minWidth: 0, wordBreak: 'break-word' }}>{pkResultPath}</div>
+
+                      {/* Row 4: PK_Description */}
+                      <div style={{ color: '#16a34a', fontWeight: 600, gridColumn: '1 / span 1' }}>PK_Description</div>
+                      <div style={{ gridColumn: '2 / 7', minWidth: 0, wordBreak: 'break-word' }}>{row.pk_description ?? '-'}</div>
+                    </div>
+                  );
+                })}
+                {(!animal || (animal.studies ?? []).every((s) => (s.pk ?? []).length === 0)) && (
+                  <div style={{ color: "#64748b", padding: 8 }}>No PK data.</div>
+                )}
+              </div>
             </div>
 
             {/* Biodistribution */}
