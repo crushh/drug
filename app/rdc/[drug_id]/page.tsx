@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import type { CSSProperties, ReactNode } from "react";
 
 type General = {
   drug_id: string;
@@ -91,6 +92,166 @@ type Detail = {
   in_vitro?: Record<string, unknown> & { studies?: Array<{ in_vitro_id: string; study_overview: string | null }>; };
 };
 
+type AnimalStudy = NonNullable<Detail["animal_in_vivo"]>["studies"][number];
+type BiodistributionEntry = AnimalStudy["biodistribution"][number];
+
+type BiodistSharedFields = {
+  biodist_type: string | null;
+  animal_model: string | null;
+  dosage_symbols: string | null;
+  dosage_value: number | null;
+  dosage_unit: string | null;
+  metabolism: string | null;
+  excretion: string | null;
+  tumor_retention_time: string | null;
+  biodist_result_image: string | null;
+  biodist_description: string | null;
+};
+
+type DetectionTbrRow = {
+  detection_time: string | null;
+  tbr: Record<string, number | null | undefined>;
+};
+
+type BiodistGroup = {
+  shared: BiodistSharedFields;
+  detectionRows: DetectionTbrRow[];
+};
+
+const fieldBoxStyle: CSSProperties = {
+  border: "1px dashed #f59e0b",
+  borderRadius: 8,
+  padding: 8,
+};
+
+type FieldBoxProps = {
+  label: string;
+  value: ReactNode;
+  style?: CSSProperties;
+};
+
+function FieldBox({ label, value, style }: FieldBoxProps) {
+  return (
+    <div style={{ ...fieldBoxStyle, ...style }}>
+      <div style={{ color: "#16a34a", fontWeight: 600 }}>{label}</div>
+      <div style={{ color: "#111827", marginTop: 4 }}>{renderValue(value)}</div>
+    </div>
+  );
+}
+
+const tableHeaderStyle: CSSProperties = {
+  textAlign: "left",
+  padding: 8,
+  borderBottom: "1px solid #fcd34d",
+  fontWeight: 600,
+  color: "#16a34a",
+  background: "#fff7ed",
+};
+
+const tableCellStyle: CSSProperties = {
+  padding: 8,
+  borderTop: "1px dashed #fcd34d",
+  color: "#111827",
+};
+
+function renderValue(value: ReactNode) {
+  if (value === null || value === undefined) {
+    return "-";
+  }
+  if (typeof value === "string") {
+    return value.trim().length > 0 ? value : "-";
+  }
+  return value;
+}
+
+function formatDosage(symbols: string | null, value: number | string | null, unit: string | null) {
+  const symbolPart = typeof symbols === "string" ? symbols.trim() : "";
+  const valuePart =
+    value === null || value === undefined
+      ? ""
+      : typeof value === "number"
+        ? Number.isFinite(value)
+          ? `${value}`
+          : ""
+        : value.toString().trim();
+  const unitPart = typeof unit === "string" ? unit.trim() : "";
+  const combined = `${symbolPart}${valuePart}${unitPart}`.trim();
+  return combined.length > 0 ? combined : "-";
+}
+
+const TBR_LABELS: Record<string, string> = {
+  tumor_blood: "肿瘤/血液 T/B",
+  tumor_muscle: "肿瘤/肌肉 T/B",
+  tumor_kidney: "肿瘤/肾脏 T/B",
+  tumor_salivary_glands: "肿瘤/唾液腺 T/B",
+  tumor_liver: "肿瘤/肝脏 T/B",
+  tumor_lung: "肿瘤/肺部 T/B",
+  tumor_heart: "肿瘤/心脏 T/B",
+};
+
+function DetectionTbrTable({ rows }: { rows: DetectionTbrRow[] }) {
+  if (rows.length === 0) return null;
+  const tbrKeys = Object.keys(TBR_LABELS) as Array<keyof typeof TBR_LABELS>;
+  return (
+    <div style={{ border: "1px dashed #f59e0b", borderRadius: 10, overflowX: "auto" }}>
+      <div style={{ padding: "8px 10px", color: "#16a34a", fontWeight: 600 }}>
+        Detection time & Tumor-to-background ratios (T/B)
+      </div>
+      <table style={{ width: "100%", borderCollapse: "separate", borderSpacing: 0 }}>
+        <thead>
+          <tr>
+            <th style={tableHeaderStyle}>Detection time</th>
+            {tbrKeys.map((key) => (
+              <th key={key} style={tableHeaderStyle}>
+                {TBR_LABELS[key]}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row, idx) => (
+            <tr key={`${row.detection_time ?? "na"}-${idx}`}>
+              <td style={tableCellStyle}>{renderValue(row.detection_time)}</td>
+              {tbrKeys.map((key) => (
+                <td key={key} style={tableCellStyle}>
+                  {renderValue((row.tbr ?? {})[key] ?? null)}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function groupBiodistributionRows(rows: BiodistributionEntry[]): BiodistGroup[] {
+  const map = new Map<string, BiodistGroup>();
+  for (const row of rows) {
+    const shared: BiodistSharedFields = {
+      biodist_type: row.biodist_type ?? null,
+      animal_model: row.animal_model ?? null,
+      dosage_symbols: row.dosage_symbols ?? null,
+      dosage_value: row.dosage_value ?? null,
+      dosage_unit: row.dosage_unit ?? null,
+      metabolism: row.metabolism ?? null,
+      excretion: row.excretion ?? null,
+      tumor_retention_time: row.tumor_retention_time ?? null,
+      biodist_result_image: row.biodist_result_image ?? null,
+      biodist_description: row.biodist_description ?? null,
+    };
+    const key = JSON.stringify(shared);
+    if (!map.has(key)) {
+      map.set(key, { shared, detectionRows: [] });
+    }
+    map.get(key)!.detectionRows.push({
+      detection_time: row.detection_time ?? null,
+      tbr: row.tbr ?? {},
+    });
+  }
+  return Array.from(map.values());
+}
+
 export default function DrugDetailPage({ params }: { params: { drug_id: string } }) {
   const drugId = useMemo(() => params.drug_id, [params]);
 
@@ -131,6 +292,8 @@ export default function DrugDetailPage({ params }: { params: { drug_id: string }
   const c = detail?.chemicals;
   const animal = detail?.animal_in_vivo;
   const inVitro = detail?.in_vitro as (Record<string, Array<any>> & { studies?: Array<any> }) | undefined;
+  const biodistRecords = (animal?.studies ?? []).flatMap((s) => s.biodistribution ?? []);
+  const biodistGroups = groupBiodistributionRows(biodistRecords);
 
   return (
     <main style={{ padding: 24 }}>
@@ -314,40 +477,28 @@ export default function DrugDetailPage({ params }: { params: { drug_id: string }
             <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 10, overflowX: "auto" }}>
               <div style={{ padding: "8px 10px", fontWeight: 600 }}>Related Biological Distribution</div>
               <div style={{ padding: 10, display: "grid", gap: 10 }}>
-                {(animal?.studies ?? []).flatMap((s) => s.biodistribution).map((row, idx) => (
-                  <div key={idx} style={{ border: "1px solid #e5e7eb", borderRadius: 10, padding: 10 }}>
-                    <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0,1fr))", gap: 8 }}>
-                      {[
-                        ["biodist_type", row.biodist_type],
-                        ["animal_model", row.animal_model],
-                        ["dosage_symbols", row.dosage_symbols],
-                        ["dosage_value", String(row.dosage_value ?? "-")],
-                        ["dosage_unit", row.dosage_unit],
-                        ["detection_time", row.detection_time],
-                        ["tumor_retention_time", row.tumor_retention_time],
-                      ].map(([label, value]) => (
-                        <div key={label as string} style={{ border: "1px dashed #f59e0b", borderRadius: 8, padding: 8 }}>
-                          <div style={{ color: "#16a34a" }}>{label}</div>
-                          <div>{(value as string) ?? "-"}</div>
-                        </div>
-                      ))}
-                    </div>
-                    {row.tbr && (
-                      <div style={{ marginTop: 8, color: "#334155" }}>
-                        <div style={{ fontWeight: 600, marginBottom: 6 }}>Tumor-to-background ratios (T/B)</div>
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0,1fr))', gap: 8 }}>
-                          {Object.entries(row.tbr).map(([k,v]) => (
-                            <div key={k} style={{ border: '1px dashed #f59e0b', borderRadius: 8, padding: 8 }}>
-                              <div style={{ color: '#16a34a' }}>{k.replace('tumor_', '').replace(/_/g,' ')}</div>
-                              <div>{v ?? '-'}</div>
-                            </div>
-                          ))}
-                        </div>
+                {biodistGroups.map((group, idx) => {
+                  const shared = group.shared;
+                  const dosage = formatDosage(shared.dosage_symbols, shared.dosage_value, shared.dosage_unit);
+                  return (
+                    <div key={idx} style={{ border: "1px solid #e5e7eb", borderRadius: 10, padding: 10, display: "grid", gap: 10 }}>
+                      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0,1fr))", gap: 8 }}>
+                        <FieldBox label="Biological Distribution_Type" value={shared.biodist_type} />
+                        <FieldBox label="Animal model" value={shared.animal_model} />
+                        <FieldBox label="Dosage" value={dosage} />
                       </div>
-                    )}
-                  </div>
-                ))}
-                {(!animal || (animal.studies ?? []).every((s) => (s.biodistribution ?? []).length === 0)) && (
+                      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0,1fr))", gap: 8 }}>
+                        <FieldBox label="Metabolism" value={shared.metabolism} />
+                        <FieldBox label="Excretion" value={shared.excretion} />
+                        <FieldBox label="Tumor retention time" value={shared.tumor_retention_time} />
+                        <FieldBox label="Biodist result image" value={shared.biodist_result_image} />
+                        <FieldBox label="Biodist description" value={shared.biodist_description} style={{ gridColumn: "span 3" }} />
+                      </div>
+                      <DetectionTbrTable rows={group.detectionRows} />
+                    </div>
+                  );
+                })}
+                {biodistGroups.length === 0 && (
                   <div style={{ color: "#64748b", padding: 8 }}>No biodistribution data.</div>
                 )}
               </div>

@@ -308,7 +308,6 @@ async function buildChemicalBlock(drugId: string, allEntities: boolean) {
   };
 
   for (const row of rows) {
-    console.log(row);
     const category = String(row.relation_role ?? "").toLowerCase();
     if (!ENTITY_CATEGORIES.includes(category as (typeof ENTITY_CATEGORIES)[number])) {
       continue;
@@ -399,7 +398,6 @@ async function fetchAnimalInVivo(drugId: string) {
   const pkByStudy = groupBy(pkRows, (row) => row.study_ref_id as string);
   const biodistByStudy = groupBy(biodistRows, (row) => row.study_ref_id as string);
   const efficacyByStudy = groupBy(efficacyRows, (row) => row.study_ref_id as string);
-
   const mapped = studies.map((study) => {
     const studyId = study.study_id as string;
     return {
@@ -411,7 +409,6 @@ async function fetchAnimalInVivo(drugId: string) {
       efficacy: (efficacyByStudy.get(studyId) ?? []).map(mapEfficacy),
     };
   });
-
   return { studies: mapped };
 }
 
