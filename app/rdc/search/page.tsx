@@ -170,8 +170,8 @@ export default function SearchListPage({
                 <div style={{ color: "#16a34a" }}>cold compound Name： {c?.compound_name ?? "-"}</div>
                 <a
                   href={(() => {
-                    const id = chemicalFirstEntityId(it.drug_id, "compound");
-                    return id ? `/api/chemical/compound/${id}` : "#";
+                    const id = chemicalFirstEntityId(it.drug_id, "cold_compound");
+                    return id ? `/chemical/cold_compound/${id}` : "#";
                   })()}
                   target="_blank"
                   style={{ padding: "6px 12px", background: "#A7F3D0", border: "2px solid #047857", borderRadius: 8, textDecoration: "none", color: "#064e3b", fontWeight: 600 }}
@@ -183,7 +183,7 @@ export default function SearchListPage({
                 <a
                   href={(() => {
                     const id = chemicalFirstEntityId(it.drug_id, "ligand");
-                    return id ? `/api/chemical/ligand/${id}` : "#";
+                    return id ? `/chemical/ligand/${id}` : "#";
                   })()}
                   target="_blank"
                   style={{ padding: "6px 12px", background: "#BFDBFE", border: "2px solid #1D4ED8", borderRadius: 8, textDecoration: "none", color: "#1e3a8a", fontWeight: 600 }}
@@ -195,7 +195,7 @@ export default function SearchListPage({
                 <a
                   href={(() => {
                     const id = chemicalFirstEntityId(it.drug_id, "linker");
-                    return id ? `/api/chemical/linker/${id}` : "#";
+                    return id ? `/chemical/linker/${id}` : "#";
                   })()}
                   target="_blank"
                   style={{ padding: "6px 12px", background: "#FDE68A", border: "2px solid #B45309", borderRadius: 8, textDecoration: "none", color: "#7c2d12", fontWeight: 600 }}
@@ -207,7 +207,7 @@ export default function SearchListPage({
                 <a
                   href={(() => {
                     const id = chemicalFirstEntityId(it.drug_id, "chelator");
-                    return id ? `/api/chemical/chelator/${id}` : "#";
+                    return id ? `/chemical/chelator/${id}` : "#";
                   })()}
                   target="_blank"
                   style={{ padding: "6px 12px", background: "#FCD34D", border: "2px solid #92400E", borderRadius: 8, textDecoration: "none", color: "#7c2d12", fontWeight: 600 }}
@@ -219,7 +219,7 @@ export default function SearchListPage({
                 <a
                   href={(() => {
                     const id = chemicalFirstEntityId(it.drug_id, "radionuclide");
-                    return id ? `/api/chemical/radionuclide/${id}` : "#";
+                    return id ? `/chemical/radionuclide/${id}` : "#";
                   })()}
                   target="_blank"
                   style={{ padding: "6px 12px", background: "#DDD6FE", border: "2px solid #6D28D9", borderRadius: 8, textDecoration: "none", color: "#1e3a8a", fontWeight: 600 }}
