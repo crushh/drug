@@ -605,7 +605,49 @@ Authorization: Bearer <token>
 
 ---
 
-## 9. 错误码 / 状态码
+## 9. 根据 drug_id 获取参考文献
+
+### GET `/api/reference/{drug_id}`
+
+#### 描述
+
+* 根据药物业务 ID 查询该药物关联的文献列表。
+* 数据来自 `rdc_drug_reference` 关联表与 `reference` 主表。
+
+#### 响应示例
+
+```json
+{
+  "drug_id": "RDC-0001",
+  "references": [
+    {
+      "reference_id": "REF-001",
+      "title": "Imaging study ...",
+      "authors": "Foo A.; Bar B.",
+      "journal": "J Nucl Med",
+      "publication_date": "2024-01-01T00:00:00.000Z",
+      "volume": "45",
+      "issue": "2",
+      "pages": "123-130",
+      "doi": "10.1000/xyz",
+      "pmid": "12345678",
+      "url": "https://example.com/paper",
+      "abstract": "...",
+      "notes": null,
+      "relation_note": "主要参考文献"
+    }
+  ]
+}
+```
+
+#### 字段说明
+
+* `references[]`：来源于 `reference` 表；`relation_note` 来源于 `rdc_drug_reference.note`。
+* 排序：按 `publication_date` 降序（空值最后），再按标题。
+
+---
+
+## 10. 错误码 / 状态码
 
 | code             | http | 说明                        |
 | ---------------- | ---- | ------------------------- |
@@ -615,7 +657,7 @@ Authorization: Bearer <token>
 
 ---
 
-## 10. 性能 / 实现注意事项
+## 11. 性能 / 实现注意事项
 
 1. **索引**
 
@@ -645,7 +687,7 @@ Authorization: Bearer <token>
 
 ---
 
-## 11. 前端交互 → API 映射总结表
+## 12. 前端交互 → API 映射总结表
 
 | 交互位置 / 按钮说明                                      | 行为                              | API 调用                                                 |
 | ------------------------------------------------ | ------------------------------- | ------------------------------------------------------ |
@@ -655,6 +697,7 @@ Authorization: Bearer <token>
 | 首页“search”按钮                                     | 用户选好了某个药物名，拿该药物基础信息             | `GET /api/rdc/detail?drug_name=...`                    |
 | RDC 列表页                                          | 展示所有药物（含5类化学成分名称），支持分页、筛选、排序    | `GET /api/rdc?page=...&page_size=...&q=...&status=...` |
 | RDC 列表中点击“RDC Info”/详情链接                         | 查看该药物的完整信息（基础信息+活性数据+chemicals） | `GET /api/rdc/{drug_id}`                               |
+| RDC 详情页“Reference”区域                                | 查看该药关联的参考文献列表                    | `GET /api/reference/{drug_id}`                         |
 | RDC 详情页右侧 “cold compound Info / linker Info ...” | 查看这个成分的详细结构 & 被它关联的所有RDC及对应活性数据 | `GET /api/chemical/{entity_category}/{entity_id}`      |
 
 ---

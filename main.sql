@@ -389,6 +389,15 @@ CREATE TABLE IF NOT EXISTS `rdc_drug_reference` (
   CONSTRAINT `fk_drug_ref_reference` FOREIGN KEY (`reference_id`) REFERENCES `reference`(`reference_id`)
     ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='药物与文献多对多关联';
+
+-- 根据 drug_id 查询参考文献（接口 /api/reference/{drug_id} 使用）:
+-- SELECT
+--   r.reference_id, r.title, r.authors, r.journal, r.publication_date, r.volume, r.issue, r.pages,
+--   r.doi, r.pmid, r.url, r.abstract, r.notes, dr.note AS relation_note
+-- FROM rdc_drug_reference dr
+-- JOIN reference r ON r.reference_id = dr.reference_id
+-- WHERE dr.drug_id = ?
+-- ORDER BY r.publication_date IS NULL, r.publication_date DESC, r.title ASC;
 -- ---------------------------------------------------------------------
 -- RDC 数据库规范化版本 (v2)
 -- 合并化学实体并统一 in vitro 明细结构?

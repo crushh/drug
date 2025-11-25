@@ -149,8 +149,8 @@ type FieldBoxProps = {
 function FieldBox({ label, value, style }: FieldBoxProps) {
   return (
     <div style={{ ...fieldBoxStyle, ...style }}>
-      <div style={{ color: "#16a34a", fontWeight: 600 }}>{label}</div>
-      <div style={{ color: "#111827", marginTop: 4 }}>{renderValue(value)}</div>
+      <div style={{ color: "#16a34a", fontWeight: 600, fontSize: 14 }}>{label}</div>
+      <div style={{ color: "#111827", marginTop: 4, fontSize: 14 }}>{renderValue(value)}</div>
     </div>
   );
 }
@@ -161,6 +161,7 @@ const tableHeaderStyle: CSSProperties = {
   borderBottom: "1px solid #d4d4d8",
   fontWeight: 700,
   color: "#0f172a",
+  fontSize: 14,
   background: "#f8fafc",
 };
 
@@ -168,6 +169,7 @@ const tableCellStyle: CSSProperties = {
   padding: "8px 10px",
   borderTop: "1px solid #e5e7eb",
   color: "#0f172a",
+  fontSize: 14,
 };
 
 function renderValue(value: ReactNode) {
@@ -277,9 +279,10 @@ export default function DrugDetailPage({ params }: { params: { drug_id: string }
 
   const [openHuman, setOpenHuman] = useState(true);
   const [openHumanItems, setOpenHumanItems] = useState<Record<number, boolean>>({});
-  const [openAnimal, setOpenAnimal] = useState(false);
-  const [openInVitro, setOpenInVitro] = useState(false);
-  const [openReferences, setOpenReferences] = useState(false);
+  const [openAnimal, setOpenAnimal] = useState(true);
+  const [openInVitro, setOpenInVitro] = useState(true);
+  const [openReferences, setOpenReferences] = useState(true);
+  const [openGeneral, setOpenGeneral] = useState(true);
   const [references, setReferences] = useState<ReferenceItem[]>([]);
   const [referencesLoading, setReferencesLoading] = useState(false);
   const [referencesError, setReferencesError] = useState<string | null>(null);
@@ -314,8 +317,11 @@ export default function DrugDetailPage({ params }: { params: { drug_id: string }
   const c = detail?.chemicals;
   const animal = detail?.animal_in_vivo;
   const inVitro = detail?.in_vitro as (Record<string, Array<any>> & { studies?: Array<any> }) | undefined;
-  const biodistRecords = (animal?.studies ?? []).flatMap((s) => s.biodistribution ?? []);
-  const biodistGroups = groupBiodistributionRows(biodistRecords);
+  const biodistRecords = useMemo(
+    () => (animal?.studies ?? []).flatMap((s) => s.biodistribution ?? []),
+    [animal?.studies]
+  );
+  const biodistGroups = useMemo(() => groupBiodistributionRows(biodistRecords), [biodistRecords]);
 
   useEffect(() => {
     const next: Record<number, boolean> = {};
@@ -376,66 +382,114 @@ export default function DrugDetailPage({ params }: { params: { drug_id: string }
       {!!g && (
         <section
           style={{
-            marginTop: 12,
-            background: "#FFFBEB",
-            border: "2px solid #1F2937",
-            borderRadius: 12,
-            padding: 18,
+          marginTop: 16,
+          background: "#F8FAFC",
+          border: "1px solid #0f766e",
+          borderRadius: 10,
+          overflow: "hidden",
           }}
         >
-          <h3 style={{ marginTop: 0 }}>General Information of This RDC</h3>
-          <ul style={{ listStyle: "none", padding: 0, margin: 0, lineHeight: 1.9 }}>
-            <li><strong>drug_id</strong>: {g.drug_id}</li>
-            <li><strong>external_id</strong>: {g.external_id ?? "-"}</li>
-            <li><strong>drug_name</strong>: {g.drug_name}</li>
-            <li><strong>drug_synonyms</strong>: {g.drug_synonyms ?? "-"}</li>
-            <li><strong>status</strong>: {g.status ?? "-"}</li>
-            {/* <li><strong>type</strong>: {g.type ?? "-"}</li> */}
-            <li><strong>smiles</strong>: {g.smiles ?? "-"}</li>
-            <li><strong>structure_image</strong>: {g.structure_image ?? "-"}</li>
-            <li>cold compound Name: {c?.compound_name ?? "-"}</li>
-            <li>ligand Name: {c?.ligand_name ?? "-"}</li>
-            <li>linker Name: {c?.linker_name ?? "-"}</li>
-            <li>chelator Name: {c?.chelator_name ?? "-"}</li>
-            <li>radionuclide Name: {c?.radionuclide_name ?? "-"}</li>
-            <li><strong>chebi_id</strong>: {g.chebi_id ?? "-"}</li>
-            <li><strong>pubchem_cid</strong>: {g.pubchem_cid ?? "-"}</li>
-            <li><strong>pubchem_sid</strong>: {g.pubchem_sid ?? "-"}</li>
-          </ul>
+          <div
+            onClick={() => setOpenGeneral((v) => !v)}
+            style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            padding: "10px 12px",
+            background: "#0f766e",
+            color: "#fff",
+            fontWeight: 700,
+            cursor: "pointer", 
+            }}
+          >
+            <span>General Information of This RDC</span>
+            <span style={{ fontSize: 16 }}>{openGeneral ? "▾" : "▸"}</span>
+          </div>
+          {openGeneral && (
+            <table style={{ width: "100%", borderCollapse: "collapse", background: "#fff" ,padding:10}}>
+              <tbody>
+                {[
+                  ["drug_id", g.drug_id],
+                  ["external_id", g.external_id ?? "-"],
+                  ["drug_name", g.drug_name],
+                  ["drug_synonyms", g.drug_synonyms ?? "-"],
+                  ["status", g.status ?? "-"],
+                  ["smiles", g.smiles ?? "-"],
+                  ["structure_image", g.structure_image ?? "-"],
+                  ["cold compound Name", c?.compound_name ?? "-"],
+                  ["ligand Name", c?.ligand_name ?? "-"],
+                  ["linker Name", c?.linker_name ?? "-"],
+                  ["chelator Name", c?.chelator_name ?? "-"],
+                  ["radionuclide Name", c?.radionuclide_name ?? "-"],
+                  ["chebi_id", g.chebi_id ?? "-"],
+                  ["pubchem_cid", g.pubchem_cid ?? "-"],
+                  ["pubchem_sid", g.pubchem_sid ?? "-"],
+                ].map(([label, value], i, arr) => (
+                  <tr key={label}>
+                    <td
+                      style={{
+                        padding: "9px 12px",
+                        borderTop: i === 0 ? "1px solid #d4d4d8" : "1px solid #e5e7eb",
+                        borderBottom: i === arr.length - 1 ? "1px solid #d4d4d8" : "1px solid #e5e7eb",
+                        width: "22%",
+                        fontWeight: 700,
+                        color: "#0f172a",
+                        fontSize: 14,
+                      }}
+                    >
+                      {label}
+                    </td>
+                    <td
+                      style={{
+                        padding: "9px 12px",
+                        borderTop: i === 0 ? "1px solid #d4d4d8" : "1px solid #e5e7eb",
+                        borderBottom: i === arr.length - 1 ? "1px solid #d4d4d8" : "1px solid #e5e7eb",
+                        color: "#0f172a",
+                        fontSize: 14,
+                        lineHeight: 1.5,
+                      }}
+                    >
+                      {value as any}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
         </section>
       )}
 
       {/* 人体活性数据（按原型排版：字段两列/虚线分隔） */}
       <section
         style={{
-          marginTop: 16,
-          background: "#e0f2f1",
-          border: "2px solid #0f766e",
+           marginTop: 16,
+          background: "#F8FAFC",
+          border: "1px solid #0f766e",
           borderRadius: 10,
-          padding: 16,
+          overflow: "hidden",
         }}
       >
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <h3 style={{ margin: 0, color: "#0f172a" }}>详细活性数据 - 人体活性数据</h3>
-          <button
-            onClick={() => setOpenHuman((v) => !v)}
-            style={{
-              padding: "6px 12px",
-              background: "#0f766e",
-              color: "#fff",
-              border: "1px solid #115e59",
-              borderRadius: 6,
-              cursor: "pointer",
-            }}
-          >
-            {openHuman ? "点击收起" : "点击展开"}
-          </button>
+        <div  onClick={() => setOpenHuman((v) => !v)} 
+          style={{ 
+             display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            padding: "10px 12px",
+            background: "#0f766e",
+            color: "#fff",
+            fontWeight: 700,
+            cursor: "pointer", 
+          }}>
+          <span>详细活性数据 - 人体活性数据</span>
+          <span>
+            {openHuman ?"▾" : "▸"}
+          </span>
         </div>
 
         {openHuman && (
-          <div style={{ marginTop: 12, display: "grid", gap: 12 }}>
+          <div style={{ display: "grid" }}>
                 {(detail?.human_activity ?? []).map((row, idx) => (
-                  <div key={idx} style={{ background: "#fff", border: "1px solid #0f766e", borderRadius: 8, padding: 10, display: "grid", gap: 10 }}>
+                  <div key={idx} style={{ background: "#fff", borderRadius: 8, padding: 10, display: "grid", gap: 10 }}>
                     <div
                       onClick={() => setOpenHumanItems((prev) => ({ ...prev, [idx]: !(prev[idx] ?? true) }))}
                       style={{
@@ -450,31 +504,31 @@ export default function DrugDetailPage({ params }: { params: { drug_id: string }
                         color: "#0f172a",
                       }}
                     >
-                      <div style={{ fontWeight: 700, color: "#008b8b" }}>Experiment {idx + 1} Reporting the Activity Data of This RDC</div>
-                      <div style={{ color: "#008b8b", fontWeight: 600 }}>[{idx + 1}] {openHumanItems[idx] ?? true ? "▾" : "▸"}</div>
+                      <div style={{ fontWeight: 700, color: "#008b8b", fontSize: 14 }}>Experiment {idx + 1} Reporting the Activity Data of This RDC</div>
+                      <div style={{ color: "#008b8b", fontWeight: 600, fontSize: 14 }}>[{idx + 1}] {openHumanItems[idx] ?? true ? "▾" : "▸"}</div>
                     </div>
 
                 {(openHumanItems[idx] ?? true) && (
                   <>
                     <div style={{ border: "1px solid #cbd5e1", borderRadius: 8, overflow: "hidden" }}>
                       <div style={{ display: "grid", gridTemplateColumns: "220px 1fr", background: "#f1f5f9", borderBottom: "1px solid #cbd5e1" }}>
-                        <div style={{ padding: "10px 12px", color: "#0f172a", fontWeight: 700 }}>incication</div>
-                        <div style={{ padding: "10px 12px", color: "#0f172a" }}>{renderValue(row.indication)}</div>
+                        <div style={{ padding: "10px 12px", color: "#0f172a", fontWeight: 700, fontSize: 14 }}>incication</div>
+                        <div style={{ padding: "10px 12px", color: "#0f172a", fontSize: 14 }}>{renderValue(row.indication)}</div>
                       </div>
                       <div style={{ display: "grid", gridTemplateColumns: "220px 1fr", background: "#fff", borderBottom: "1px solid #cbd5e1" }}>
-                        <div style={{ padding: "10px 12px", color: "#0f172a", fontWeight: 700 }}>Patients</div>
-                        <div style={{ padding: "10px 12px", color: "#0f172a" }}>{renderValue(row.patients)}</div>
+                        <div style={{ padding: "10px 12px", color: "#0f172a", fontWeight: 700, fontSize: 14 }}>Patients</div>
+                        <div style={{ padding: "10px 12px", color: "#0f172a", fontSize: 14 }}>{renderValue(row.patients)}</div>
                       </div>
-                      <div style={{ display: "grid", gridTemplateColumns: "220px 1fr 180px 1fr", background: "#f8fafc" }}>
-                        <div style={{ padding: "10px 12px", color: "#0f172a", fontWeight: 700, borderRight: "1px solid #cbd5e1" }}>dosage</div>
-                        <div style={{ padding: "10px 12px", color: "#0f172a", borderRight: "1px solid #cbd5e1" }}>{renderValue(row.dosage)}</div>
-                        <div style={{ padding: "10px 12px", color: "#0f172a", fontWeight: 700, borderRight: "1px solid #cbd5e1" }}>Frequency</div>
-                        <div style={{ padding: "10px 12px", color: "#0f172a" }}>{renderValue(row.frequency)}</div>
+                      <div style={{ display: "grid", gridTemplateColumns: "220px 1fr 180px 1fr", background: "#f8fafc",borderBottom: "1px solid #cbd5e1"}}>
+                        <div style={{ padding: "10px 12px", color: "#0f172a", fontWeight: 700, fontSize: 14, borderRight: "1px solid #cbd5e1" }}>dosage</div>
+                        <div style={{ padding: "10px 12px", color: "#0f172a", fontSize: 14, borderRight: "1px solid #cbd5e1" }}>{renderValue(row.dosage)}</div>
+                        <div style={{ padding: "10px 12px", color: "#0f172a", fontWeight: 700, fontSize: 14, borderRight: "1px solid #cbd5e1" }}>Frequency</div>
+                        <div style={{ padding: "10px 12px", color: "#0f172a", fontSize: 14 }}>{renderValue(row.frequency)}</div>
                       </div>
-                    </div>
+                    
 
-                    <div style={{ color: "#0f766e", fontWeight: 700, marginTop: 4 }}>Realted clinical Trial</div>
-                    <div style={{ border: "1px solid #cbd5e1", borderRadius: 8, overflow: "hidden" }}>
+                      <div style={{ display: "grid", gridTemplateColumns: "220px 1fr 180px 1fr",padding: "10px 12px", background: "#fff" ,borderBottom: "1px solid #cbd5e1",color: "#0f172a", fontWeight: 700, fontSize: 14 }}>Realted clinical Trial</div>
+                     
                       {[
                         ["clinical Number", row.clinical_trial_number],
                         ["Results-Description", row.results_description],
@@ -494,11 +548,11 @@ export default function DrugDetailPage({ params }: { params: { drug_id: string }
                             borderBottom: i === 7 ? "none" : "1px solid #cbd5e1",
                           }}
                         >
-                          <div style={{ padding: "10px 12px", color: "#0f172a", fontWeight: 700 }}>{label}</div>
-                          <div style={{ padding: "10px 12px", color: "#0f172a", lineHeight: 1.5 }}>{renderValue(value as any)}</div>
+                          <div style={{ padding: "10px 12px", color: "#0f172a", fontWeight: 700, fontSize: 14 }}>{label}</div>
+                          <div style={{ padding: "10px 12px", color: "#0f172a", lineHeight: 1.5, fontSize: 14 }}>{renderValue(value as any)}</div>
                         </div>
                       ))}
-                    </div>
+                   </div>
                   </>
                 )}
               </div>
@@ -513,35 +567,43 @@ export default function DrugDetailPage({ params }: { params: { drug_id: string }
       {/* 动物活性数据 */}
       <section
         style={{
-          marginTop: 16,
-          background: "#e0f2f1",
-          border: "2px solid #0f766e",
+           marginTop: 16,
+          background: "#F8FAFC",
+          border: "1px solid #0f766e",
           borderRadius: 10,
-          padding: 16,
+          overflow: "hidden",
         }}
       >
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <h3 style={{ margin: 0, color: "#0f172a" }}>动物活性数据</h3>
-          <button
-            onClick={() => setOpenAnimal((v) => !v)}
-            style={{ padding: "6px 12px", background: "#0f766e", color: "#fff", border: "1px solid #115e59", borderRadius: 6, cursor: "pointer" }}
-          >
-            {openAnimal ? "点击收起" : "点击展开"}
-          </button>
+        <div 
+         onClick={() => setOpenAnimal((v) => !v)}
+        style={{ 
+           display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            padding: "10px 12px",
+            background: "#0f766e",
+            color: "#fff",
+            fontWeight: 700,
+            cursor: "pointer", 
+         }}>
+         <span>动物活性数据</span>
+          <span>
+            {openAnimal ?"▾" : "▸"}
+          </span>
         </div>
 
         {openAnimal && (
           <div style={{ display: "grid", gap: 14, marginTop: 12 }}>
 
             {/* Biodistribution */}
-            <div style={{ background: "#fff", border: "1px solid #0f766e", borderRadius: 8, overflowX: "auto" }}>
+            <div style={{ background: "#fff", borderRadius: 8, overflowX: "auto" }}>
               <div style={{ padding: "8px 10px", fontWeight: 700, color: "#0f172a", background: "#f1f5f9", borderBottom: "1px solid #cbd5e1" }}>Related Biological Distribution</div>
               <div style={{ padding: 10, display: "grid", gap: 10 }}>
                 {biodistGroups.map((group, idx) => {
                   const shared = group.shared;
                   const dosage = formatDosage(shared.dosage_symbols, shared.dosage_value, shared.dosage_unit);
                   return (
-                    <div key={idx} style={{ border: "1px solid #e5e7eb", borderRadius: 6, padding: 10, display: "grid", gap: 10, background: "#fff" }}>
+                    <div key={idx} style={{ border: "1px solid #e5e7eb", borderRadius: 6, display: "grid", gap: 10, background: "#fff" }}>
                       <div
                         onClick={() => setOpenBiodistItems((prev) => ({ ...prev, [idx]: !(prev[idx] ?? true) }))}
                         style={{ display: "flex", justifyContent: "space-between", alignItems: "center", cursor: "pointer", padding: "6px 8px", borderRadius: 4, background: "#f8fafc", border: "1px solid #e5e7eb" }}
@@ -565,7 +627,7 @@ export default function DrugDetailPage({ params }: { params: { drug_id: string }
                                 ["Biodist description", renderValue(shared.biodist_description)],
                               ].map(([label, value], i, arr) => (
                                 <tr key={label}>
-                                  <td style={{ padding: "8px 10px", borderTop: i === 0 ? "1px solid #d4d4d8" : "1px solid #e5e7eb", borderBottom: i === arr.length - 1 ? "1px solid #d4d4d8" : "1px solid #e5e7eb", width: "26%", fontWeight: 700, color: "#0f172a", background: "#f8fafc" }}>
+                                  <td style={{ padding: "8px 10px", borderTop: i === 0 ? "1px solid #d4d4d8" : "1px solid #e5e7eb", borderBottom: i === arr.length - 1 ? "1px solid #d4d4d8" : "1px solid #e5e7eb", width: "26%", fontWeight: 700, color: "#0f172a", background: "#f8fafc", fontSize: 14 }}>
                                     {label}
                                   </td>
                                   <td style={{ padding: "8px 10px", borderTop: i === 0 ? "1px solid #d4d4d8" : "1px solid #e5e7eb", borderBottom: i === arr.length - 1 ? "1px solid #d4d4d8" : "1px solid #e5e7eb", color: "#0f172a", lineHeight: 1.5 }}>
@@ -607,10 +669,10 @@ export default function DrugDetailPage({ params }: { params: { drug_id: string }
                             ["Adverse reactions", renderValue(row.adverse_reactions)],
                           ].map(([label, value], i, arr) => (
                             <tr key={label}>
-                              <td style={{ padding: "8px 10px", borderTop: i === 0 ? "1px solid #d4d4d8" : "1px solid #e5e7eb", borderBottom: i === arr.length - 1 ? "1px solid #d4d4d8" : "1px solid #e5e7eb", width: "26%", fontWeight: 700, color: "#0f172a", background: "#f8fafc" }}>
+                              <td style={{ padding: "8px 10px", borderTop: i === 0 ? "1px solid #d4d4d8" : "1px solid #e5e7eb", borderBottom: i === arr.length - 1 ? "1px solid #d4d4d8" : "1px solid #e5e7eb", width: "26%", fontWeight: 700, color: "#0f172a", background: "#f8fafc", fontSize: 14 }}>
                                 {label}
                               </td>
-                              <td style={{ padding: "8px 10px", borderTop: i === 0 ? "1px solid #d4d4d8" : "1px solid #e5e7eb", borderBottom: i === arr.length - 1 ? "1px solid #d4d4d8" : "1px solid #e5e7eb", color: "#0f172a", lineHeight: 1.5 }}>
+                              <td style={{ padding: "8px 10px", borderTop: i === 0 ? "1px solid #d4d4d8" : "1px solid #e5e7eb", borderBottom: i === arr.length - 1 ? "1px solid #d4d4d8" : "1px solid #e5e7eb", color: "#0f172a", lineHeight: 1.5, fontSize: 14 }}>
                                 {value as any}
                               </td>
                             </tr>
@@ -633,20 +695,26 @@ export default function DrugDetailPage({ params }: { params: { drug_id: string }
       <section
         style={{
           marginTop: 16,
-          background: "#e0f2f1",
-          border: "2px solid #0f766e",
+          background: "#F8FAFC",
+          border: "1px solid #0f766e",
           borderRadius: 10,
-          padding: 16,
+          overflow: "hidden",
         }}
       >
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <h3 style={{ margin: 0, color: "#0f172a" }}>体外数据</h3>
-          <button
-            onClick={() => setOpenInVitro((v) => !v)}
-            style={{ padding: "6px 12px", background: "#0f766e", color: "#fff", border: "1px solid #115e59", borderRadius: 6, cursor: "pointer" }}
-          >
-            {openInVitro ? "点击收起" : "点击展开"}
-          </button>
+        <div 
+         onClick={() => setOpenInVitro((v) => !v)}
+         style={{  display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            padding: "10px 12px",
+            background: "#0f766e",
+            color: "#fff",
+            fontWeight: 700,
+            cursor: "pointer", }}>
+          <span>体外数据</span>
+         <span>
+            {openInVitro ? "▾" : "▸"}
+          </span>
         </div>
 
         {openInVitro && (
@@ -677,58 +745,70 @@ export default function DrugDetailPage({ params }: { params: { drug_id: string }
               return (
                 <div style={{ display: 'grid', gap: 12 }}>
                   {partitionRows.length > 0 && (
-                    <div style={{ background: '#fff', border: '1px solid #0f766e', borderRadius: 8, padding: 10, display: 'grid', gap: 8 }}>
-                      <div style={{ fontWeight: 700, color: '#0f172a', background: "#f1f5f9", borderRadius: 6, padding: "6px 8px" }}>Realted Partition coefficient</div>
+                    <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 6, padding: 8, display: 'grid', gap: 6 }}>
+                      <div style={{ fontWeight: 700, color: '#0f172a', background: "#f8fafc", borderRadius: 4, padding: "6px 8px", border: "1px solid #e5e7eb" }}>Realted Partition coefficient</div>
                       {partitionRows.map((row, idx) => {
                         const value = formatDosage(row.measurement_symbols, row.measurement_value, row.measurement_unit);
                         return (
-                          <div key={idx} style={{ border: '1px solid #cbd5e1', borderRadius: 8, padding: 10, display: 'grid', gap: 8, background: idx % 2 === 0 ? "#f8fafc" : "#fff" }}>
-                            <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr auto 1fr', columnGap: 12, rowGap: 8, alignItems: 'start' }}>
-                              <div style={{ color: '#0f172a', fontWeight: 700 }}>Partition coefficient-Type</div>
-                              <div style={{ color: '#0f172a', minWidth: 0, wordBreak: 'break-word' }}>{renderValue(row.measurement_type)}</div>
-                              <div style={{ color: '#0f172a', fontWeight: 700 }}>Partition coefficient-Value</div>
-                              <div style={{ color: '#0f172a', minWidth: 0, wordBreak: 'break-word' }}>{value}</div>
-                              <div style={{ color: '#0f172a', fontWeight: 700, gridColumn: '1 / span 1' }}>Partition coefficient-Description</div>
-                              <div style={{ color: '#0f172a', gridColumn: '2 / span 3', minWidth: 0, wordBreak: 'break-word' }}>
-                                {renderValue(row.method_description)}
-                              </div>
-                            </div>
-                          </div>
+                          <table key={idx} style={{ width: "100%", borderCollapse: "collapse", border: "1px solid #e5e7eb", borderRadius: 4, overflow: "hidden", background: "#fff" }}>
+                            <tbody>
+                              {[
+                                ["Partition coefficient-Type", renderValue(row.measurement_type)],
+                                ["Partition coefficient-Value", value],
+                                ["Partition coefficient-Description", renderValue(row.method_description)],
+                              ].map(([label, val], i, arr) => (
+                                <tr key={label}>
+                                  <td style={{ padding: "8px 10px", borderTop: i === 0 ? "1px solid #d4d4d8" : "1px solid #e5e7eb", borderBottom: i === arr.length - 1 ? "1px solid #d4d4d8" : "1px solid #e5e7eb", width: "26%", fontWeight: 700, color: "#0f172a", background: "#f8fafc" }}>
+                                    {label}
+                                  </td>
+                                  <td style={{ padding: "8px 10px", borderTop: i === 0 ? "1px solid #d4d4d8" : "1px solid #e5e7eb", borderBottom: i === arr.length - 1 ? "1px solid #d4d4d8" : "1px solid #e5e7eb", color: "#0f172a", lineHeight: 1.5, fontSize: 14 }}>
+                                    {val as any}
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
                         );
                       })}
                     </div>
                   )}
 
                   {affinityRows.length > 0 && (
-                    <div style={{ background: '#fff', border: '1px solid #0f766e', borderRadius: 8, padding: 10, display: 'grid', gap: 8 }}>
-                      <div style={{ fontWeight: 700, color: '#0f172a', background: "#f1f5f9", borderRadius: 6, padding: "6px 8px" }}>Realted affinity</div>
+                    <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 6, padding: 8, display: 'grid', gap: 6 }}>
+                      <div style={{ fontWeight: 700, color: '#0f172a', background: "#f8fafc", borderRadius: 4, padding: "6px 8px", border: "1px solid #e5e7eb" }}>Realted affinity</div>
                       {affinityRows.map((row, idx) => {
                         const value = formatDosage(row.measurement_symbols, row.measurement_value, row.measurement_unit);
                         return (
-                          <div key={idx} style={{ border: '1px solid #cbd5e1', borderRadius: 8, padding: 10, display: 'grid', gap: 8, background: idx % 2 === 0 ? "#f8fafc" : "#fff" }}>
-                            <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr auto 1fr', columnGap: 12, rowGap: 8, alignItems: 'start' }}>
-                              <div style={{ color: '#0f172a', fontWeight: 700 }}>affinity-Type</div>
-                              <div style={{ color: '#0f172a', minWidth: 0, wordBreak: 'break-word' }}>{renderValue(row.measurement_type)}</div>
-                              <div style={{ color: '#0f172a', fontWeight: 700 }}>affinity-value</div>
-                              <div style={{ color: '#0f172a', minWidth: 0, wordBreak: 'break-word' }}>{value}</div>
-                              <div style={{ color: '#0f172a', fontWeight: 700, gridColumn: '1 / span 1' }}>affinity-method description</div>
-                              <div style={{ color: '#0f172a', gridColumn: '2 / span 3', minWidth: 0, wordBreak: 'break-word' }}>
-                                {renderValue(row.method_description)}
-                              </div>
-                            </div>
-                          </div>
+                          <table key={idx} style={{ width: "100%", borderCollapse: "collapse", border: "1px solid #e5e7eb", borderRadius: 4, overflow: "hidden", background: "#fff" }}>
+                            <tbody>
+                              {[
+                                ["affinity-Type", renderValue(row.measurement_type)],
+                                ["affinity-value", value],
+                                ["affinity-method description", renderValue(row.method_description)],
+                              ].map(([label, val], i, arr) => (
+                                <tr key={label}>
+                                  <td style={{ padding: "8px 10px", borderTop: i === 0 ? "1px solid #d4d4d8" : "1px solid #e5e7eb", borderBottom: i === arr.length - 1 ? "1px solid #d4d4d8" : "1px solid #e5e7eb", width: "26%", fontWeight: 700, color: "#0f172a", background: "#f8fafc", fontSize: 14 }}>
+                                    {label}
+                                  </td>
+                                  <td style={{ padding: "8px 10px", borderTop: i === 0 ? "1px solid #d4d4d8" : "1px solid #e5e7eb", borderBottom: i === arr.length - 1 ? "1px solid #d4d4d8" : "1px solid #e5e7eb", color: "#0f172a", lineHeight: 1.5, fontSize: 14 }}>
+                                    {val as any}
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
                         );
                       })}
                     </div>
                   )}
 
                   {!!stabilityOverview && (
-                    <div style={{ background: '#fff', border: '1px solid #0f766e', borderRadius: 8, padding: 10, display: 'grid', gap: 8 }}>
-                      <div style={{ fontWeight: 700, color: '#0f172a', background: "#f1f5f9", borderRadius: 6, padding: "6px 8px" }}>Realted stability</div>
-                      <div style={{ border: '1px solid #cbd5e1', borderRadius: 8, padding: 10, background: "#f8fafc" }}>
+                    <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 6, padding: 8, display: 'grid', gap: 6 }}>
+                      <div style={{ fontWeight: 700, color: '#0f172a', background: "#f8fafc", borderRadius: 4, padding: "6px 8px", border: "1px solid #e5e7eb" }}>Realted stability</div>
+                      <div style={{ border: '1px solid #e5e7eb', borderRadius: 6, padding: 10, background: "#fff" }}>
                         <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', columnGap: 12, rowGap: 6, alignItems: 'start' }}>
-                          <div style={{ color: '#0f172a', fontWeight: 700 }}>in vitro stability</div>
-                          <div style={{ color: '#0f172a', minWidth: 0, wordBreak: 'break-word' }}>{renderValue(stabilityOverview)}</div>
+                          <div style={{ color: '#0f172a', fontWeight: 700, fontSize: 14 }}>in vitro stability</div>
+                          <div style={{ color: '#0f172a', minWidth: 0, wordBreak: 'break-word', fontSize: 14 }}>{renderValue(stabilityOverview)}</div>
                         </div>
                       </div>
                     </div>

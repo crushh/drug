@@ -18,6 +18,23 @@ export interface DrugDetailOptions {
   allEntities?: boolean;
 }
 
+export type ReferenceItem = {
+  reference_id: string;
+  title: string;
+  authors: string | null;
+  journal: string | null;
+  publication_date: string | null;
+  volume: string | null;
+  issue: string | null;
+  pages: string | null;
+  doi: string | null;
+  pmid: string | null;
+  url: string | null;
+  abstract: string | null;
+  notes: string | null;
+  relation_note: string | null;
+};
+
 const ENTITY_CATEGORIES = ["cold_compound", "ligand", "linker", "chelator", "radionuclide"] as const;
 
 function toNumber(value: unknown): number | null {
@@ -508,6 +525,49 @@ function mapMeasurement(row: RowDataPacket) {
     measurement_unit: (row.measurement_unit as string) ?? null,
     method_description: (row.method_description as string) ?? null,
   };
+}
+
+export async function getDrugReferences(drugId: string): Promise<ReferenceItem[]> {
+  const pool = getPool();
+  const [rows] = await pool.query<RowDataPacket[]>(
+    `SELECT
+       r.reference_id,
+       r.title,
+       r.authors,
+       r.journal,
+       r.publication_date,
+       r.volume,
+       r.issue,
+       r.pages,
+       r.doi,
+       r.pmid,
+       r.url,
+       r.abstract,
+       r.notes,
+       dr.note AS relation_note
+     FROM rdc_drug_reference dr
+     JOIN reference r ON r.reference_id = dr.reference_id
+     WHERE dr.drug_id = ?
+     ORDER BY r.publication_date IS NULL, r.publication_date DESC, r.title ASC`,
+    [drugId]
+  );
+
+  return rows.map((row) => ({
+    reference_id: row.reference_id as string,
+    title: (row.title as string) ?? "",
+    authors: (row.authors as string) ?? null,
+    journal: (row.journal as string) ?? null,
+    publication_date: toDateTime(row.publication_date),
+    volume: (row.volume as string) ?? null,
+    issue: (row.issue as string) ?? null,
+    pages: (row.pages as string) ?? null,
+    doi: (row.doi as string) ?? null,
+    pmid: (row.pmid as string) ?? null,
+    url: (row.url as string) ?? null,
+    abstract: (row.abstract as string) ?? null,
+    notes: (row.notes as string) ?? null,
+    relation_note: (row.relation_note as string) ?? null,
+  }));
 }
 
 function groupBy(rows: RowDataPacket[], getter: (row: RowDataPacket) => string) {
