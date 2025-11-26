@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import type { CSSProperties, ReactNode } from "react";
 import {
   AnimalSection,
@@ -57,6 +57,8 @@ type ChemicalDetail = {
   rdc_activity?: RdcActivity[];
 };
 
+const ASSET_BASE = (process.env.NEXT_PUBLIC_ASSET_BASE ?? "").replace(/\/+$/, "");
+
 type FieldBoxProps = {
   label: string;
   value: ReactNode;
@@ -78,12 +80,22 @@ function FieldBox({ label, value, style }: FieldBoxProps) {
   );
 }
 
+function buildAssetUrl(path?: string | null, folder?: string) {
+  if (!path) return null;
+  if (/^https?:\/\//i.test(path)) return path;
+  const normalized = path.replace(/^\/+/, "");
+  const prefix = folder ? `${folder.replace(/\/+$/, "")}/` : "";
+  const base = ASSET_BASE ? `${ASSET_BASE}/` : "";
+  return `${base}${prefix}${normalized}`;
+}
+
 function RdcActivityCard({ activity }: { activity: RdcActivity }) {
   const [openHuman, setOpenHuman] = useState(true);
   const [openHumanItems, setOpenHumanItems] = useState<Record<number, boolean>>({});
   const [openAnimal, setOpenAnimal] = useState(true);
   const [openBiodistItems, setOpenBiodistItems] = useState<Record<number, boolean>>({});
   const [openInVitro, setOpenInVitro] = useState(true);
+  const [open, setOpen] = useState(true);
 
   const biodistGroups = useMemo(
     () => groupBiodistributionRows((activity.animal_in_vivo?.studies ?? []).flatMap((s) => s.biodistribution ?? [])),
@@ -114,26 +126,25 @@ function RdcActivityCard({ activity }: { activity: RdcActivity }) {
   }, [biodistGroups]);
 
   return (
-    <div
-      style={{
-        border: "2px solid #0f766e",
-        borderRadius: 12,
-        padding: 16,
-        background: "#F8FAFC",
-        boxShadow: "0 2px 0 rgba(0,0,0,0.05)",
-      }}
-    >
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
-        <div style={{ display: "grid", gap: 4 }}>
-          <div style={{ fontSize: 14, color: "#111827", fontWeight: 600 }}>RDC ID:</div>
-          <a
-            href={`/rdc/${activity.drug_id}`}
-            style={{ color: "#16A34A", textDecoration: "none", fontWeight: 700 }}
-            target="_blank"
-            rel="noreferrer"
-          >
-            {activity.drug_id}
-          </a>
+    <div style={{ overflow: "hidden" }}>
+      <div
+        onClick={() => setOpen((v) => !v)}
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          padding: "8px",
+          background: "#1fa1a8",
+          color: "#fff",
+          cursor: "pointer",
+          borderRadius: "4px"
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: 10, fontWeight: 700 }}>
+          <span style={{ fontSize: 16 }}>{open ? "▾" : "▸"}</span>
+          <span style={{ fontSize: 15 }}>
+            {activity.drug_name} [{activity.status ?? "-"}]
+          </span>
         </div>
         <a
           href={`/rdc/${activity.drug_id}`}
@@ -149,37 +160,34 @@ function RdcActivityCard({ activity }: { activity: RdcActivity }) {
             fontSize: 14,
             fontWeight: 700,
           }}
+          onClick={(e) => e.stopPropagation()}
         >
-          RDC Info
+          ADC Info
         </a>
       </div>
-      <div style={{ color: "#111827", fontSize: 16, fontWeight: 700 }}>{activity.drug_name}</div>
-      <div style={{ display: "flex", gap: 8, marginTop: 6, flexWrap: "wrap", alignItems: "center" }}>
-        <span style={{ background: "#DCFCE7", color: "#065f46", padding: "4px 8px", borderRadius: 8, fontWeight: 600 }}>
-          Status: {renderValue(activity.status)}
-        </span>
-        <span style={{ background: "#E0F2FE", color: "#1d4ed8", padding: "4px 8px", borderRadius: 8, fontWeight: 600 }}>
-          Type: {renderValue(activity.type)}
-        </span>
-      </div>
 
-      <HumanActivitySection
-        items={activity.human_activity ?? []}
-        open={openHuman}
-        onToggle={() => setOpenHuman((v) => !v)}
-        openItems={openHumanItems}
-        onToggleItem={(idx) => setOpenHumanItems((prev) => ({ ...prev, [idx]: !(prev[idx] ?? true) }))}
-      />
+      {open && (
+        <div style={{ display: "grid" }}>
 
-      <AnimalSection
-        animal={activity.animal_in_vivo}
-        open={openAnimal}
-        onToggle={() => setOpenAnimal((v) => !v)}
-        openBiodistItems={openBiodistItems}
-        onToggleBiodistItem={(idx) => setOpenBiodistItems((prev) => ({ ...prev, [idx]: !(prev[idx] ?? true) }))}
-      />
+          <HumanActivitySection
+            items={activity.human_activity ?? []}
+            open={openHuman}
+            onToggle={() => setOpenHuman((v) => !v)}
+            openItems={openHumanItems}
+            onToggleItem={(idx) => setOpenHumanItems((prev) => ({ ...prev, [idx]: !(prev[idx] ?? true) }))}
+          />
 
-      <InVitroSection data={activity.in_vitro} open={openInVitro} onToggle={() => setOpenInVitro((v) => !v)} />
+          <AnimalSection
+            animal={activity.animal_in_vivo}
+            open={openAnimal}
+            onToggle={() => setOpenAnimal((v) => !v)}
+            openBiodistItems={openBiodistItems}
+            onToggleBiodistItem={(idx) => setOpenBiodistItems((prev) => ({ ...prev, [idx]: !(prev[idx] ?? true) }))}
+          />
+
+          <InVitroSection data={activity.in_vitro} open={openInVitro} onToggle={() => setOpenInVitro((v) => !v)} />
+        </div>
+      )}
     </div>
   );
 }
@@ -252,7 +260,7 @@ export default function ChemicalDetailPage({
   ];
 
   return (
-    <main style={{ padding: 24 }}>
+    <main style={{ padding: 24, minWidth: 1200 }}>
       <h1 style={{ margin: 0 }}>Chemical Entity Detail</h1>
       <p style={{ marginTop: 6, color: "#475569" }}>
         Category: {entity_category} | Entity ID: {entity_id}
@@ -289,61 +297,171 @@ export default function ChemicalDetailPage({
           </div>
           {openBasic && (
             <div style={{ display: "grid", gap: 12, padding: 12, background: "#fff" }}>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 10 }}>
-                {["structure_image", "mol2d_path", "mol3d_path"].map((key) => {
-                  const val =
-                    key === "structure_image" ? basic.structure_image : key === "mol2d_path" ? basic.mol2d_path : basic.mol3d_path;
-                  const content =
-                    key === "structure_image" && typeof val === "string" ? (
-                      <img
-                        src={val}
-                        alt="structure"
-                        style={{ maxWidth: "100%", maxHeight: 200, objectFit: "contain", borderRadius: 6, border: "1px solid #e5e7eb" }}
-                      />
-                    ) : val ? (
-                      <a href={val} target="_blank" rel="noreferrer" style={{ color: "#0ea5e9" }}>
-                        {val}
-                      </a>
-                    ) : (
-                      "-"
-                    );
-                  return <FieldBox key={key} label={key} value={content} />;
-                })}
-              </div>
+              {(() => {
+                const structureUrl = buildAssetUrl(
+                  typeof basic.structure_image === "string" ? basic.structure_image : null,
+                  "structure"
+                );
+                const mol2d = buildAssetUrl(typeof basic.mol2d_path === "string" ? basic.mol2d_path : null, "rdc_2d");
+                const mol3d = buildAssetUrl(typeof basic.mol3d_path === "string" ? basic.mol3d_path : null, "rdc_3d");
+                return (
+                  <div style={{ width: "100%", overflowX: "auto" }}>
+                    <table style={{ width: "100%", minWidth: 360, borderCollapse: "collapse" }}>
+                      <tbody>
+                        {basicRows.map(([label, value], i, arr) => {
+                          const row = (
+                            <tr key={label}>
+                              <td
+                                style={{
+                                  padding: "9px 12px",
+                                  borderTop: i === 0 ? "1px solid #d4d4d8" : "1px solid #e5e7eb",
+                                  borderBottom: i === arr.length - 1 ? "1px solid #d4d4d8" : "1px solid #e5e7eb",
+                                  width: "24%",
+                                  fontWeight: 700,
+                                  color: "#0f172a",
+                                  fontSize: 14,
+                                  wordBreak: "break-word",
+                                }}
+                              >
+                                {label}
+                              </td>
+                              <td
+                                style={{
+                                  padding: "9px 12px",
+                                  borderTop: i === 0 ? "1px solid #d4d4d8" : "1px solid #e5e7eb",
+                                  borderBottom: i === arr.length - 1 ? "1px solid #d4d4d8" : "1px solid #e5e7eb",
+                                  color: "#0f172a",
+                                  fontSize: 14,
+                                  lineHeight: 1.5,
+                                  wordBreak: "break-word",
+                                }}
+                              >
+                                {renderValue(value)}
+                              </td>
+                            </tr>
+                          );
 
-              <table style={{ width: "100%", borderCollapse: "collapse" }}>
-                <tbody>
-                  {basicRows.map(([label, value], i, arr) => (
-                    <tr key={label}>
-                      <td
-                        style={{
-                          padding: "9px 12px",
-                          borderTop: i === 0 ? "1px solid #d4d4d8" : "1px solid #e5e7eb",
-                          borderBottom: i === arr.length - 1 ? "1px solid #d4d4d8" : "1px solid #e5e7eb",
-                          width: "24%",
-                          fontWeight: 700,
-                          color: "#0f172a",
-                          fontSize: 14,
-                        }}
-                      >
-                        {label}
-                      </td>
-                      <td
-                        style={{
-                          padding: "9px 12px",
-                          borderTop: i === 0 ? "1px solid #d4d4d8" : "1px solid #e5e7eb",
-                          borderBottom: i === arr.length - 1 ? "1px solid #d4d4d8" : "1px solid #e5e7eb",
-                          color: "#0f172a",
-                          fontSize: 14,
-                          lineHeight: 1.5,
-                        }}
-                      >
-                        {renderValue(value)}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                          if (label !== "synonyms") {
+                            return row;
+                          }
+
+                          return (
+                            <React.Fragment key={label}>
+                              {row}
+                              <tr>
+                                <td
+                                  style={{
+                                    padding: "12px",
+                                    borderTop: "1px solid #e5e7eb",
+                                    borderBottom: "1px solid #e5e7eb",
+                                    width: "24%",
+                                    fontWeight: 700,
+                                    color: "#0f172a",
+                                    fontSize: 14,
+                                    verticalAlign: "top",
+                                    wordBreak: "break-word",
+                                  }}
+                                >
+                                  Structure
+                                </td>
+                                <td
+                                  style={{
+                                    borderTop: "1px solid #e5e7eb",
+                                    borderBottom: "1px solid #e5e7eb",
+                                    color: "#0f172a",
+                                    fontSize: 14,
+                                    lineHeight: 1.5,
+                                    wordBreak: "break-word",
+                                  }}
+                                >
+                                  <div
+                                    style={{
+                                      borderRadius: 10,
+                                      padding: 12,
+                                      display: "grid",
+                                      gap: 10,
+                                    }}
+                                  >
+                                    <div
+                                      style={{
+                                        minHeight: 220,
+                                        border: "1px solid #e5e7eb",
+                                        borderRadius: 8,
+                                        background: "#fff",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        padding: 12,
+                                      }}
+                                    >
+                                      {structureUrl ? (
+                                        <img
+                                          src={structureUrl}
+                                          alt="structure"
+                                          style={{
+                                            width: "100%",
+                                            height: "100%",
+                                            maxWidth: "min(766px, 100%)",
+                                            objectFit: "contain",
+                                            borderRadius: 4,
+                                          }}
+                                        />
+                                      ) : (
+                                        <span style={{ color: "#94a3b8" }}>No structure image</span>
+                                      )}
+                                    </div>
+                                    <div style={{ height: 1, background: "#e2e8f0", margin: "4px 0" }} />
+                                    <div style={{ display: "flex", justifyContent: "center", gap: 40, flexWrap: "wrap" }}>
+                                      {mol3d ? (
+                                        <a
+                                          href={mol3d}
+                                          download
+                                          style={{
+                                            display: "inline-flex",
+                                            alignItems: "center",
+                                            gap: 6,
+                                            color: "#0f9e9e",
+                                            fontWeight: 700,
+                                            textDecoration: "none",
+                                          }}
+                                        >
+                                          <span style={{ fontSize: 18 }}>⬇</span>
+                                          <span>3D MOL</span>
+                                        </a>
+                                      ) : (
+                                        <span style={{ color: "#94a3b8" }}>3D MOL not available</span>
+                                      )}
+                                      {mol2d ? (
+                                        <a
+                                          href={mol2d}
+                                          download
+                                          style={{
+                                            display: "inline-flex",
+                                            alignItems: "center",
+                                            gap: 6,
+                                            color: "#0f9e9e",
+                                            fontWeight: 700,
+                                            textDecoration: "none",
+                                          }}
+                                        >
+                                          <span style={{ fontSize: 18 }}>⬇</span>
+                                          <span>2D MOL</span>
+                                        </a>
+                                      ) : (
+                                        <span style={{ color: "#94a3b8" }}>2D MOL not available</span>
+                                      )}
+                                    </div>
+                                  </div>
+                                </td>
+                              </tr>
+                            </React.Fragment>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                );
+              })()}
             </div>
           )}
         </section>

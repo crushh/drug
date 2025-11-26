@@ -207,8 +207,8 @@ export function HumanActivitySection({
       style={{
         marginTop: 16,
         background: "#F8FAFC",
-        border: "1px solid #0f766e",
-        borderRadius: 10,
+        border: "1px solid #2aa3a3",
+        borderRadius: 6,
         overflow: "hidden",
       }}
     >
@@ -219,20 +219,25 @@ export function HumanActivitySection({
           justifyContent: "space-between",
           alignItems: "center",
           padding: "10px 12px",
-          background: "#0f766e",
-          color: "#fff",
+          background: "#bcecec",
+          color: "#0f3f3f",
           fontWeight: 700,
           cursor: "pointer",
         }}
       >
-        <span>详细活性数据 - 人体活性数据</span>
-        <span>{open ? "▾" : "▸"}</span>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <span style={{ fontSize: 16 }}>{open ? "▾" : "▸"}</span>
+          <span>详细活性数据 - 人体活性数据</span>
+        </div>
+        <span style={{ fontSize: 13, fontWeight: 600 }}>
+          Click To Hide/Show <span style={{ fontWeight: 800 }}>{items.length}</span> Activity Data Related to This Level
+        </span>
       </div>
 
       {open && (
         <div style={{ display: "grid" }}>
           {items.map((row, idx) => (
-            <div key={idx} style={{ background: "#fff", borderRadius: 8, padding: 10, display: "grid", gap: 10 }}>
+            <div key={idx} style={{ background: "#fff", borderRadius: 4, padding: 10, display: "grid", gap: 10 }}>
               <div
                 onClick={() => onToggleItem(idx)}
                 style={{
@@ -252,7 +257,7 @@ export function HumanActivitySection({
               </div>
 
               {(openItems[idx] ?? true) && (
-                <div style={{ border: "1px solid #cbd5e1", borderRadius: 8, overflow: "hidden" }}>
+                <div style={{ border: "1px solid #cbd5e1", borderRadius: 4, overflow: "hidden" }}>
                   <div style={{ display: "grid", gridTemplateColumns: "220px 1fr", background: "#f1f5f9", borderBottom: "1px solid #cbd5e1" }}>
                     <div style={{ padding: "10px 12px", color: "#0f172a", fontWeight: 700, fontSize: 14 }}>incication</div>
                     <div style={{ padding: "10px 12px", color: "#0f172a", fontSize: 14 }}>{renderValue(row.indication)}</div>
@@ -321,6 +326,7 @@ export function AnimalSection({
     () => (animal?.studies ?? []).flatMap((s) => s.biodistribution ?? []),
     [animal?.studies]
   );
+  console.log('animal', animal);
   const biodistGroups = useMemo(() => groupBiodistributionRows(biodistRecords), [biodistRecords]);
 
   return (
@@ -328,8 +334,8 @@ export function AnimalSection({
       style={{
         marginTop: 16,
         background: "#F8FAFC",
-        border: "1px solid #0f766e",
-        borderRadius: 10,
+        border: "1px solid #2aa3a3",
+        borderRadius: 6,
         overflow: "hidden",
       }}
     >
@@ -340,19 +346,24 @@ export function AnimalSection({
           justifyContent: "space-between",
           alignItems: "center",
           padding: "10px 12px",
-          background: "#0f766e",
-          color: "#fff",
+          background: "#bcecec",
+          color: "#0f3f3f",
           fontWeight: 700,
           cursor: "pointer",
         }}
       >
-        <span>动物活性数据</span>
-        <span>{open ? "▾" : "▸"}</span>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <span style={{ fontSize: 16 }}>{open ? "▾" : "▸"}</span>
+          <span>动物活性数据</span>
+        </div>
+        <span style={{ fontSize: 13, fontWeight: 600 }}>
+          Click To Hide/Show Activity Data Related to This Level
+        </span>
       </div>
 
       {open && (
         <div style={{ display: "grid", gap: 14, marginTop: 12 }}>
-          <div style={{ background: "#fff", borderRadius: 8, overflowX: "auto" }}>
+          <div style={{ background: "#fff", borderRadius: 4, overflowX: "auto" }}>
             <div style={{ padding: "8px 10px", fontWeight: 700, color: "#0f172a", background: "#f1f5f9", borderBottom: "1px solid #cbd5e1" }}>Related Biological Distribution</div>
             <div style={{ padding: 10, display: "grid", gap: 10 }}>
               {biodistGroups.map((group, idx) => {
@@ -490,8 +501,8 @@ export function InVitroSection({
       style={{
         marginTop: 16,
         background: "#F8FAFC",
-        border: "1px solid #0f766e",
-        borderRadius: 10,
+        border: "1px solid #2aa3a3",
+        borderRadius: 6,
         overflow: "hidden",
       }}
     >
@@ -502,14 +513,19 @@ export function InVitroSection({
           justifyContent: "space-between",
           alignItems: "center",
           padding: "10px 12px",
-          background: "#0f766e",
-          color: "#fff",
+          background: "#bcecec",
+          color: "#0f3f3f",
           fontWeight: 700,
           cursor: "pointer",
         }}
       >
-        <span>体外数据</span>
-        <span>{open ? "▾" : "▸"}</span>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <span style={{ fontSize: 16 }}>{open ? "▾" : "▸"}</span>
+          <span>体外数据</span>
+        </div>
+        <span style={{ fontSize: 13, fontWeight: 600 }}>
+          Click To Hide/Show Activity Data Related to This Level
+        </span>
       </div>
 
       {open && (
