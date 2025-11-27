@@ -298,12 +298,16 @@ export default function ChemicalDetailPage({
           {openBasic && (
             <div style={{ display: "grid", gap: 12, padding: 12, background: "#fff" }}>
               {(() => {
-                const structureUrl = buildAssetUrl(
-                  typeof basic.structure_image === "string" ? basic.structure_image : null,
-                  "structure"
-                );
-                const mol2d = buildAssetUrl(typeof basic.mol2d_path === "string" ? basic.mol2d_path : null, "rdc_2d");
-                const mol3d = buildAssetUrl(typeof basic.mol3d_path === "string" ? basic.mol3d_path : null, "rdc_3d");
+                const structureName =
+                  typeof basic.structure_image === "string" && basic.structure_image
+                    ? `${basic.structure_image}.png`
+                    : null;
+                const structureUrl = buildAssetUrl(structureName, "structure");
+                const displayStructureUrl = structureUrl ? `${structureUrl}?imageMogr2/format/png` : null;
+                const mol2dName = typeof basic.mol2d_path === "string" && basic.mol2d_path ? `${basic.mol2d_path}.mol` : null;
+                const mol3dName = typeof basic.mol3d_path === "string" && basic.mol3d_path ? `${basic.mol3d_path}.sdf` : null;
+                const mol2d = buildAssetUrl(mol2dName, "rdc_2d");
+                const mol3d = buildAssetUrl(mol3dName, "rdc_3d");
                 return (
                   <div style={{ width: "100%", overflowX: "auto" }}>
                     <table style={{ width: "100%", minWidth: 360, borderCollapse: "collapse" }}>
@@ -394,14 +398,14 @@ export default function ChemicalDetailPage({
                                         padding: 12,
                                       }}
                                     >
-                                      {structureUrl ? (
-                                        <img
-                                          src={structureUrl}
-                                          alt="structure"
-                                          style={{
-                                            width: "100%",
-                                            height: "100%",
-                                            maxWidth: "min(766px, 100%)",
+                                    {structureUrl ? (
+                                      <img
+                                        src={structureUrl}
+                                        alt="structure"
+                                        style={{
+                                          width: "100%",
+                                          height: "100%",
+                                          maxWidth: "min(766px, 100%)",
                                             objectFit: "contain",
                                             borderRadius: 4,
                                           }}
