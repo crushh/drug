@@ -11,6 +11,7 @@ import {
   type HumanActivity,
   type InVitro,
 } from "@/app/components/activity-sections";
+import { getEntityCategoryColor, PRIMARY_COLOR } from "@/lib/entity-category-colors";
 
 type General = {
   drug_id: string;
@@ -47,6 +48,7 @@ type Chemicals = {
   linker_name?: string | null;
   chelator_name?: string | null;
   radionuclide_name?: string | null;
+  entities?: Record<string, Array<{ entity_id: string; name: string }>>;
 };
 
 type Detail = {
@@ -110,6 +112,7 @@ export default function DrugDetailPage({ params }: { params: { drug_id: string }
   const [openInVitro, setOpenInVitro] = useState(true);
   const [openReferences, setOpenReferences] = useState(true);
   const [openGeneral, setOpenGeneral] = useState(true);
+  const [openActivitySection, setOpenActivitySection] = useState(true);
   const [references, setReferences] = useState<ReferenceItem[]>([]);
   const [referencesLoading, setReferencesLoading] = useState(false);
   const [referencesError, setReferencesError] = useState<string | null>(null);
@@ -139,6 +142,11 @@ export default function DrugDetailPage({ params }: { params: { drug_id: string }
       cancelled = true;
     };
   }, [drugId]);
+
+  function chemicalFirstEntityId(category: string): string | undefined {
+    const ents = detail?.chemicals?.entities?.[category];
+    return ents && ents.length > 0 ? ents[0].entity_id : undefined;
+  }
 
   const g = detail?.general;
   const c = detail?.chemicals;
@@ -208,24 +216,24 @@ export default function DrugDetailPage({ params }: { params: { drug_id: string }
       {!!g && (
         <section
           style={{
-          marginTop: 16,
-          background: "#F8FAFC",
-          border: "1px solid #0f766e",
-          borderRadius: 10,
-          overflow: "hidden",
+            marginTop: 16,
+            background: "#F8FAFC",
+            border: `1px solid ${PRIMARY_COLOR}`,
+            borderRadius: 10,
+            overflow: "hidden",
           }}
         >
           <div
             onClick={() => setOpenGeneral((v) => !v)}
             style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            padding: "10px 12px",
-            background: "#0f766e",
-            color: "#fff",
-            fontWeight: 700,
-            cursor: "pointer", 
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              padding: "10px 12px",
+              background: PRIMARY_COLOR,
+              color: "#fff",
+              fontWeight: 700,
+              cursor: "pointer",
             }}
           >
             <span>General Information of This RDC</span>
@@ -233,82 +241,189 @@ export default function DrugDetailPage({ params }: { params: { drug_id: string }
           </div>
           {openGeneral && (
             <table style={{ width: "100%", borderCollapse: "collapse", background: "#fff" ,padding:10}}>
-              <tbody>
-                {[
-                  ["drug_id", g.drug_id],
-                  ["external_id", g.external_id ?? "-"],
-                  ["drug_name", g.drug_name],
-                  ["drug_synonyms", g.drug_synonyms ?? "-"],
-                  ["status", g.status ?? "-"],
-                  ["smiles", g.smiles ?? "-"],
-                  ["structure_image", g.structure_image ?? "-"],
-                  ["cold compound Name", c?.compound_name ?? "-"],
-                  ["ligand Name", c?.ligand_name ?? "-"],
-                  ["linker Name", c?.linker_name ?? "-"],
-                  ["chelator Name", c?.chelator_name ?? "-"],
-                  ["radionuclide Name", c?.radionuclide_name ?? "-"],
-                  ["chebi_id", g.chebi_id ?? "-"],
-                  ["pubchem_cid", g.pubchem_cid ?? "-"],
-                  ["pubchem_sid", g.pubchem_sid ?? "-"],
-                ].map(([label, value], i, arr) => (
-                  <tr key={label}>
-                    <td
-                      style={{
-                        padding: "9px 12px",
-                        borderTop: i === 0 ? "1px solid #d4d4d8" : "1px solid #e5e7eb",
-                        borderBottom: i === arr.length - 1 ? "1px solid #d4d4d8" : "1px solid #e5e7eb",
-                        width: "22%",
-                        fontWeight: 700,
-                        color: "#0f172a",
-                        fontSize: 14,
-                      }}
-                    >
-                      {label}
-                    </td>
-                    <td
-                      style={{
-                        padding: "9px 12px",
-                        borderTop: i === 0 ? "1px solid #d4d4d8" : "1px solid #e5e7eb",
-                        borderBottom: i === arr.length - 1 ? "1px solid #d4d4d8" : "1px solid #e5e7eb",
-                        color: "#0f172a",
-                        fontSize: 14,
-                        lineHeight: 1.5,
-                      }}
-                    >
-                      {value as any}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+	              <tbody>
+	                {[
+	                  ["drug_id", g.drug_id],
+	                  ["external_id", g.external_id ?? "-"],
+	                  ["drug_name", g.drug_name],
+	                  ["drug_synonyms", g.drug_synonyms ?? "-"],
+	                  ["status", g.status ?? "-"],
+	                  ["smiles", g.smiles ?? "-"],
+	                  ["structure_image", g.structure_image ?? "-"],
+	                  ["cold compound Name", c?.compound_name ?? "-"],
+	                  ["ligand Name", c?.ligand_name ?? "-"],
+	                  ["linker Name", c?.linker_name ?? "-"],
+	                  ["chelator Name", c?.chelator_name ?? "-"],
+	                  ["radionuclide Name", c?.radionuclide_name ?? "-"],
+	                  ["chebi_id", g.chebi_id ?? "-"],
+	                  ["pubchem_cid", g.pubchem_cid ?? "-"],
+	                  ["pubchem_sid", g.pubchem_sid ?? "-"],
+	                ].map(([label, value], i, arr) => {
+	                  const isCold = label === "cold compound Name";
+	                  const isLigand = label === "ligand Name";
+	                  const isLinker = label === "linker Name";
+	                  const isChelator = label === "chelator Name";
+	                  const isRadionuclide = label === "radionuclide Name";
+
+	                  let content: any = value as any;
+
+	                  if (isCold || isLigand || isLinker || isChelator || isRadionuclide) {
+	                    let category = "";
+	                    let buttonLabel = "";
+
+	                    if (isCold) {
+	                      category = "cold_compound";
+	                      buttonLabel = "cold compound Info";
+	                    } else if (isLigand) {
+	                      category = "ligand";
+	                      buttonLabel = "ligand Info";
+	                    } else if (isLinker) {
+	                      category = "linker";
+	                      buttonLabel = "linker Info";
+	                    } else if (isChelator) {
+	                      category = "chelator";
+	                      buttonLabel = "chelator Info";
+	                    } else if (isRadionuclide) {
+	                      category = "radionuclide";
+	                      buttonLabel = "radionuclide Info";
+	                    }
+
+	                    const entityId = category ? chemicalFirstEntityId(category) : undefined;
+
+	                    if (entityId && category) {
+	                      const color = getEntityCategoryColor(category);
+	                      content = (
+	                        <div
+	                          style={{
+	                            display: "flex",
+	                            justifyContent: "space-between",
+	                            alignItems: "center",
+	                            gap: 12,
+	                          }}
+	                        >
+	                          <span>{value as any}</span>
+	                          <a
+	                            href={`/chemical/${category}/${encodeURIComponent(entityId)}`}
+	                            target="_blank"
+	                            rel="noreferrer"
+	                            style={{
+	                              padding: "6px 12px",
+	                              borderRadius: 8,
+	                              textDecoration: "none",
+	                              fontSize: 14,
+	                              fontWeight: 600,
+	                              background: color,
+	                              boxShadow: "4px 3px 0 0 #565656",
+	                              color: "#fff",
+	                              display: "inline-block",
+	                            }}
+	                          >
+	                            {buttonLabel}
+	                          </a>
+	                        </div>
+	                      );
+	                    }
+	                  }
+
+	                  return (
+	                    <tr key={label}>
+	                      <td
+	                        style={{
+	                          padding: "9px 12px",
+	                          borderTop: i === 0 ? "1px solid #d4d4d8" : "1px solid #e5e7eb",
+	                          borderBottom: i === arr.length - 1 ? "1px solid #d4d4d8" : "1px solid #e5e7eb",
+	                          width: "22%",
+	                          fontWeight: 700,
+	                          color: "#0f172a",
+	                          fontSize: 14,
+	                        }}
+	                      >
+	                        {label}
+	                      </td>
+	                      <td
+	                        style={{
+	                          padding: "9px 12px",
+	                          borderTop: i === 0 ? "1px solid #d4d4d8" : "1px solid #e5e7eb",
+	                          borderBottom: i === arr.length - 1 ? "1px solid #d4d4d8" : "1px solid #e5e7eb",
+	                          color: "#0f172a",
+	                          fontSize: 14,
+	                          lineHeight: 1.5,
+	                        }}
+	                      >
+	                        {content}
+	                      </td>
+	                    </tr>
+	                  );
+	                })}
+	              </tbody>
+	            </table>
           )}
         </section>
       )}
 
-      <HumanActivitySection
-        items={detail?.human_activity ?? []}
-        open={openHuman}
-        onToggle={() => setOpenHuman((v) => !v)}
-        openItems={openHumanItems}
-        onToggleItem={(idx) => setOpenHumanItems((prev) => ({ ...prev, [idx]: !(prev[idx] ?? true) }))}
-      />
+	      <section
+	        style={{
+	          marginTop: 16,
+	          background: "#F8FAFC",
+	          border: `1px solid ${PRIMARY_COLOR}`,
+	          borderRadius: 10,
+	          overflow: "hidden",
+	        }}
+	      >
+	        <div
+	          onClick={() => setOpenActivitySection((v) => !v)}
+	          style={{
+	            display: "flex",
+	            justifyContent: "space-between",
+	            alignItems: "center",
+	            padding: "10px 12px",
+	            background: PRIMARY_COLOR,
+	            color: "#fff",
+	            fontWeight: 700,
+	            cursor: "pointer",
+	          }}
+	        >
+	          <span>Full List of Activity Data of This RDC</span>
+	          <span style={{ fontSize: 16 }}>{openActivitySection ? "▾" : "▸"}</span>
+	        </div>
 
-      <AnimalSection
-        animal={animal}
-        open={openAnimal}
-        onToggle={() => setOpenAnimal((v) => !v)}
-        openBiodistItems={openBiodistItems}
-        onToggleBiodistItem={(idx) => setOpenBiodistItems((prev) => ({ ...prev, [idx]: !(prev[idx] ?? true) }))}
-      />
+	        {openActivitySection && (
+	          <div style={{ padding: 12, background: "#fff", display: "grid", gap: 12 }}>
+	            <HumanActivitySection
+	              items={detail?.human_activity ?? []}
+	              open={openHuman}
+	              onToggle={() => setOpenHuman((v) => !v)}
+	              openItems={openHumanItems}
+	              onToggleItem={(idx) =>
+	                setOpenHumanItems((prev) => ({ ...prev, [idx]: !(prev[idx] ?? true) }))
+	              }
+	            />
 
-      <InVitroSection data={inVitro} open={openInVitro} onToggle={() => setOpenInVitro((v) => !v)} />
+	            <AnimalSection
+	              animal={animal}
+	              open={openAnimal}
+	              onToggle={() => setOpenAnimal((v) => !v)}
+	              openBiodistItems={openBiodistItems}
+	              onToggleBiodistItem={(idx) =>
+	                setOpenBiodistItems((prev) => ({ ...prev, [idx]: !(prev[idx] ?? true) }))
+	              }
+	            />
+
+	            <InVitroSection
+	              data={inVitro}
+	              open={openInVitro}
+	              onToggle={() => setOpenInVitro((v) => !v)}
+	            />
+	          </div>
+	        )}
+	      </section>
 
       {/* 参考文献 */}
       <section
         style={{
           marginTop: 16,
           background: "#F8FAFC",
-          border: "1px solid #0f766e",
+          border: `1px solid ${PRIMARY_COLOR}`,
           borderRadius: 10,
           overflow: "hidden",
         }}
@@ -320,7 +435,7 @@ export default function DrugDetailPage({ params }: { params: { drug_id: string }
             justifyContent: "space-between",
             alignItems: "center",
             padding: "10px 12px",
-            background: "#0f766e",
+            background: PRIMARY_COLOR,
             color: "#fff",
             fontWeight: 700,
             cursor: "pointer",
@@ -350,10 +465,10 @@ export default function DrugDetailPage({ params }: { params: { drug_id: string }
                         gap: 12,
                         padding: 12,
                         background: idx % 2 === 0 ? "#f8fafc" : "#fff",
-                        borderBottom: idx === references.length - 1 ? "none" : "1px solid #e2e8f0",
-                      }}
-                    >
-                      <div style={{ color: "#0f766e", fontWeight: 700, fontStyle: "italic" }}>{`Ref ${idx + 1}`}</div>
+                          borderBottom: idx === references.length - 1 ? "none" : "1px solid #e2e8f0",
+                        }}
+                      >
+                      <div style={{ color: PRIMARY_COLOR, fontWeight: 700, fontStyle: "italic" }}>{`Ref ${idx + 1}`}</div>
                       <div style={{ display: "grid", gap: 6 }}>
                         <div style={{ color: "#0f172a", lineHeight: 1.5 }}>{ref.title}</div>
                         <div style={{ color: "#475569", fontSize: 13, display: "flex", flexWrap: "wrap", gap: 8 }}>
@@ -376,9 +491,9 @@ export default function DrugDetailPage({ params }: { params: { drug_id: string }
                             Visit source ↗
                           </a>
                         )}
-                        {ref.relation_note && (
-                          <div style={{ color: "#0f766e", fontSize: 12 }}>Note: {ref.relation_note}</div>
-                        )}
+                          {ref.relation_note && (
+                            <div style={{ color: PRIMARY_COLOR, fontSize: 12 }}>Note: {ref.relation_note}</div>
+                          )}
                       </div>
                     </div>
                   );

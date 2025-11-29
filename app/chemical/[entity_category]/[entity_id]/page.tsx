@@ -12,6 +12,7 @@ import {
   type HumanActivity,
   type InVitro,
 } from "@/app/components/activity-sections";
+import { getEntityCategoryColor, PRIMARY_COLOR } from "@/lib/entity-category-colors";
 
 type Basic = {
   entity_category: string;
@@ -152,8 +153,8 @@ function RdcActivityCard({ activity }: { activity: RdcActivity }) {
           rel="noreferrer"
           style={{
             padding: "6px 12px",
-            background: "#0f766e",
-            border: "2px solid #0f172a",
+            background: PRIMARY_COLOR,
+            boxShadow: "4px 3px 0 0 #565656",
             color: "#fff",
             borderRadius: 8,
             textDecoration: "none",
@@ -198,11 +199,13 @@ export default function ChemicalDetailPage({
   params: { entity_category: string; entity_id: string };
 }) {
   const { entity_category, entity_id } = params;
+  const mainColor = getEntityCategoryColor(entity_category);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [detail, setDetail] = useState<ChemicalDetail | null>(null);
   const [openBasic, setOpenBasic] = useState(true);
+  const [openRdcSection, setOpenRdcSection] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
@@ -260,11 +263,11 @@ export default function ChemicalDetailPage({
   ];
 
   return (
-    <main style={{ padding: 24, minWidth: 1200 }}>
-      <h1 style={{ margin: 0 }}>Chemical Entity Detail</h1>
+    <main>
+      {/* <h1 style={{ margin: 0 }}>Chemical Entity Detail</h1>
       <p style={{ marginTop: 6, color: "#475569" }}>
         Category: {entity_category} | Entity ID: {entity_id}
-      </p>
+      </p> */}
 
       {error && <p style={{ color: "#b91c1c" }}>错误：{error}</p>}
       {loading && <p>Loading…</p>}
@@ -274,7 +277,7 @@ export default function ChemicalDetailPage({
           style={{
             marginTop: 16,
             background: "#F8FAFC",
-            border: "1px solid #0f766e",
+            border: `1px solid ${mainColor}`,
             borderRadius: 10,
             overflow: "hidden",
           }}
@@ -286,13 +289,13 @@ export default function ChemicalDetailPage({
               justifyContent: "space-between",
               alignItems: "center",
               padding: "10px 12px",
-              background: "#0f766e",
+              background: mainColor,
               color: "#fff",
               fontWeight: 700,
               cursor: "pointer",
             }}
           >
-            <span>Basic Information</span>
+            <span>General Information of this {entity_category}  </span>
             <span style={{ fontSize: 16 }}>{openBasic ? "▾" : "▸"}</span>
           </div>
           {openBasic && (
@@ -473,30 +476,46 @@ export default function ChemicalDetailPage({
 
       <section
         style={{
-          marginTop: 18,
-          background: "#fff",
-          border: "2px solid #0f766e",
-          borderRadius: 12,
-          padding: 14,
-          display: "grid",
-          gap: 12,
+          marginTop: 16,
+          background: "#F8FAFC",
+          border: `1px solid ${mainColor}`,
+          borderRadius: 10,
+          overflow: "hidden",
         }}
       >
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <div style={{ fontWeight: 800, color: "#0f172a", fontSize: 18 }}>RDC 活性数据（与该化学实体关联）</div>
-          <div style={{ color: "#475569" }}>
-            共 {detail?.rdc_activity?.length ?? 0} 条 | 点击卡片查看完整活性数据
-          </div>
+        <div
+          onClick={() => setOpenRdcSection((v) => !v)}
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            padding: "10px 12px",
+            background: mainColor,
+            color: "#fff",
+            fontWeight: 700,
+            cursor: "pointer",
+          }}
+        >
+          <span>Full Information of The Activity Data of The RDC(s) Related to This {entity_category} </span>
+          <span style={{ fontSize: 16 }}>{openRdcSection ? "▾" : "▸"}</span>
         </div>
 
-        <div style={{ display: "grid", gap: 14 }}>
-          {(detail?.rdc_activity ?? []).map((activity) => (
-            <RdcActivityCard key={activity.drug_id} activity={activity} />
-          ))}
-          {(detail?.rdc_activity ?? []).length === 0 && (
-            <div style={{ color: "#64748b", padding: 8 }}>No RDC activity found for this chemical entity.</div>
-          )}
-        </div>
+        {openRdcSection && (
+          <div
+            style={{
+              display: "grid",
+              gap: 14,
+              padding: 10,
+            }}
+          >
+            {(detail?.rdc_activity ?? []).map((activity) => (
+              <RdcActivityCard key={activity.drug_id} activity={activity} />
+            ))}
+            {(detail?.rdc_activity ?? []).length === 0 && (
+              <div style={{ color: "#64748b", padding: 8 }}>No RDC activity found for this chemical entity.</div>
+            )}
+          </div>
+        )}
       </section>
     </main>
   );

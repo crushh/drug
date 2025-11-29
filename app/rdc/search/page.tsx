@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { getEntityCategoryColor } from "@/lib/entity-category-colors";
 
 type SearchItem = { drug_id: string; drug_name: string; status: string | null };
 
@@ -174,7 +175,15 @@ export default function SearchListPage({
                     return id ? `/chemical/cold_compound/${id}` : "#";
                   })()}
                   target="_blank"
-                  style={{ padding: "6px 12px", background: "#A7F3D0", border: "2px solid #047857", borderRadius: 8, textDecoration: "none", color: "#064e3b", fontWeight: 600 }}
+                  style={{
+                    padding: "6px 12px",
+                    background: getEntityCategoryColor("cold_compound"),
+                    border: "2px solid #111827",
+                    borderRadius: 8,
+                    textDecoration: "none",
+                    color: "#fff",
+                    fontWeight: 600,
+                  }}
                 >
                   cold compound Info
                 </a>
@@ -186,7 +195,15 @@ export default function SearchListPage({
                     return id ? `/chemical/ligand/${id}` : "#";
                   })()}
                   target="_blank"
-                  style={{ padding: "6px 12px", background: "#BFDBFE", border: "2px solid #1D4ED8", borderRadius: 8, textDecoration: "none", color: "#1e3a8a", fontWeight: 600 }}
+                  style={{
+                    padding: "6px 12px",
+                    background: getEntityCategoryColor("ligand"),
+                    border: "2px solid #111827",
+                    borderRadius: 8,
+                    textDecoration: "none",
+                    color: "#fff",
+                    fontWeight: 600,
+                  }}
                 >
                   ligand Info
                 </a>
@@ -198,7 +215,15 @@ export default function SearchListPage({
                     return id ? `/chemical/linker/${id}` : "#";
                   })()}
                   target="_blank"
-                  style={{ padding: "6px 12px", background: "#FDE68A", border: "2px solid #B45309", borderRadius: 8, textDecoration: "none", color: "#7c2d12", fontWeight: 600 }}
+                  style={{
+                    padding: "6px 12px",
+                    background: getEntityCategoryColor("linker"),
+                    border: "2px solid #111827",
+                    borderRadius: 8,
+                    textDecoration: "none",
+                    color: "#fff",
+                    fontWeight: 600,
+                  }}
                 >
                   linker Info
                 </a>
@@ -210,7 +235,15 @@ export default function SearchListPage({
                     return id ? `/chemical/chelator/${id}` : "#";
                   })()}
                   target="_blank"
-                  style={{ padding: "6px 12px", background: "#FCD34D", border: "2px solid #92400E", borderRadius: 8, textDecoration: "none", color: "#7c2d12", fontWeight: 600 }}
+                  style={{
+                    padding: "6px 12px",
+                    background: getEntityCategoryColor("chelator"),
+                    border: "2px solid #111827",
+                    borderRadius: 8,
+                    textDecoration: "none",
+                    color: "#fff",
+                    fontWeight: 600,
+                  }}
                 >
                   chelator Info
                 </a>
@@ -222,7 +255,15 @@ export default function SearchListPage({
                     return id ? `/chemical/radionuclide/${id}` : "#";
                   })()}
                   target="_blank"
-                  style={{ padding: "6px 12px", background: "#DDD6FE", border: "2px solid #6D28D9", borderRadius: 8, textDecoration: "none", color: "#1e3a8a", fontWeight: 600 }}
+                  style={{
+                    padding: "6px 12px",
+                    background: getEntityCategoryColor("radionuclide"),
+                    border: "2px solid #111827",
+                    borderRadius: 8,
+                    textDecoration: "none",
+                    color: "#fff",
+                    fontWeight: 600,
+                  }}
                 >
                   radionuclide Info
                 </a>
