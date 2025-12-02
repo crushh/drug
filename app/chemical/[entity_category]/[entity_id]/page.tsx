@@ -53,9 +53,21 @@ type RdcActivity = {
   in_vitro?: InVitro;
 };
 
+type RdcSummary = {
+  drug_id: string;
+  drug_name: string;
+  status: string | null;
+  compound_name: string | null;
+  ligand_name: string | null;
+  linker_name: string | null;
+  chelator_name: string | null;
+  radionuclide_name: string | null;
+};
+
 type ChemicalDetail = {
   basic?: Basic;
   rdc_activity?: RdcActivity[];
+  rdcs?: RdcSummary[];
 };
 
 const ASSET_BASE = (process.env.NEXT_PUBLIC_ASSET_BASE ?? "").replace(/\/+$/, "");
@@ -163,7 +175,7 @@ function RdcActivityCard({ activity }: { activity: RdcActivity }) {
           }}
           onClick={(e) => e.stopPropagation()}
         >
-          ADC Info
+          RDC Info
         </a>
       </div>
 
@@ -200,6 +212,8 @@ export default function ChemicalDetailPage({
 }) {
   const { entity_category, entity_id } = params;
   const mainColor = getEntityCategoryColor(entity_category);
+  const isSummaryOnlyCategory =
+    entity_category === "ligand" || entity_category === "chelator" || entity_category === "radionuclide";
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -213,10 +227,14 @@ export default function ChemicalDetailPage({
       setLoading(true);
       setError(null);
       try {
-        const res = await fetch(
-          `/api/chemical/${encodeURIComponent(entity_category)}/${encodeURIComponent(entity_id)}?include_activity=true`,
-          { cache: "no-store" }
-        );
+        const url = isSummaryOnlyCategory
+          ? `/api/chemical/${encodeURIComponent(entity_category)}/${encodeURIComponent(
+              entity_id
+            )}/rdc-list`
+          : `/api/chemical/${encodeURIComponent(entity_category)}/${encodeURIComponent(
+              entity_id
+            )}?include_activity=true`;
+        const res = await fetch(url, { cache: "no-store" });
         if (!res.ok) {
           const err = await res.json().catch(() => ({}));
           throw new Error(err?.message || `HTTP ${res.status}`);
@@ -232,9 +250,11 @@ export default function ChemicalDetailPage({
     return () => {
       cancelled = true;
     };
-  }, [entity_category, entity_id]);
+  }, [entity_category, entity_id, isSummaryOnlyCategory]);
 
   const basic = detail?.basic;
+  const rdcActivity = detail?.rdc_activity ?? [];
+  const rdcList = detail?.rdcs ?? [];
 
   const basicRows: Array<[string, ReactNode]> = [
     ["entity_category", basic?.entity_category ?? "-"],
@@ -474,49 +494,266 @@ export default function ChemicalDetailPage({
         </section>
       )}
 
-      <section
-        style={{
-          marginTop: 16,
-          background: "#F8FAFC",
-          border: `1px solid ${mainColor}`,
-          borderRadius: 10,
-          overflow: "hidden",
-        }}
-      >
-        <div
-          onClick={() => setOpenRdcSection((v) => !v)}
+      {!isSummaryOnlyCategory && (
+        <section
           style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            padding: "10px 12px",
-            background: mainColor,
-            color: "#fff",
-            fontWeight: 700,
-            cursor: "pointer",
+            marginTop: 16,
+            background: "#F8FAFC",
+            border: `1px solid ${mainColor}`,
+            borderRadius: 10,
+            overflow: "hidden",
           }}
         >
-          <span>Full Information of The Activity Data of The RDC(s) Related to This {entity_category} </span>
-          <span style={{ fontSize: 16 }}>{openRdcSection ? "▾" : "▸"}</span>
-        </div>
-
-        {openRdcSection && (
           <div
+            onClick={() => setOpenRdcSection((v) => !v)}
             style={{
-              display: "grid",
-              gap: 14,
-              padding: 10,
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              padding: "10px 12px",
+              background: mainColor,
+              color: "#fff",
+              fontWeight: 700,
+              cursor: "pointer",
             }}
           >
-            {(detail?.rdc_activity ?? []).map((activity) => (
-              <RdcActivityCard key={activity.drug_id} activity={activity} />
-            ))}
-            {(detail?.rdc_activity ?? []).length === 0 && (
-              <div style={{ color: "#64748b", padding: 8 }}>No RDC activity found for this chemical entity.</div>
-            )}
+            <span>Full Information of The Activity Data of The RDC(s) Related to This {entity_category} </span>
+            <span style={{ fontSize: 16 }}>{openRdcSection ? "▾" : "▸"}</span>
           </div>
-        )}
-      </section>
+
+          {openRdcSection && (
+            <div
+              style={{
+                display: "grid",
+                gap: 14,
+                padding: 10,
+              }}
+            >
+              {rdcActivity.map((activity) => (
+                <RdcActivityCard key={activity.drug_id} activity={activity} />
+              ))}
+              {rdcActivity.length === 0 && (
+                <div style={{ color: "#64748b", padding: 8 }}>No RDC activity found for this chemical entity.</div>
+              )}
+            </div>
+          )}
+        </section>
+      )}
+
+      {isSummaryOnlyCategory && (
+        <section
+          style={{
+            marginTop: 16,
+            background: "#F8FAFC",
+            border: `1px solid ${mainColor}`,
+            borderRadius: 10,
+            overflow: "hidden",
+          }}
+        >
+          <div
+            onClick={() => setOpenRdcSection((v) => !v)}
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              padding: "10px 12px",
+              background: mainColor,
+              color: "#fff",
+              fontWeight: 700,
+              cursor: "pointer",
+            }}
+          >
+            <span>与此目标相关的 RDC 完整列表</span>
+            <span style={{ fontSize: 16 }}>{openRdcSection ? "▾" : "▸"}</span>
+          </div>
+
+          {openRdcSection && (
+            <div
+              style={{
+                padding: 12,
+                background: "#fff",
+              }}
+            >
+              <div
+                style={{
+                  overflow: "hidden",
+                  background: "#fff",
+                }}
+              >
+                <div
+                  style={{
+                    padding: "8px 12px",
+                    fontWeight: 700,
+                    fontSize: 14,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                  }}
+                >
+                </div>
+                <div style={{ overflowX: "auto" }}>
+                  <table
+                    style={{
+                      width: "100%",
+                      borderCollapse: "collapse",
+                      minWidth: 720,
+                    }}
+                  >
+                    <thead>
+                      <tr>
+                        {[
+                          "RDC Info",
+                          "RDC Name",
+                          "cold compound",
+                          "ligand",
+                          "linker",
+                          "chelator",
+                          "radionuclide",
+                        ].map((label, idx) => (
+                          <th
+                            key={label}
+                            style={{
+                              padding: "10px 12px",
+                              borderBottom: "1px solid #e5e7eb",
+                              textAlign: label === "RDC Info" ? "left" : "center",
+                              fontSize: 14,
+                              fontWeight: 600,
+                              color: "#111827",
+                              whiteSpace: "nowrap",
+                              position: idx === 0 ? "sticky" as const : undefined,
+                              left: idx === 0 ? 0 : undefined,
+                              zIndex: idx === 0 ? 2 : undefined,
+                              background: idx === 0 ? "#fff" : undefined,
+                            }}
+                          >
+                            {label}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {rdcList.map((item) => (
+                        <tr key={item.drug_id}>
+                          <td
+                            style={{
+                              padding: "12px",
+                              borderBottom: "1px solid #e5e7eb",
+                              position: "sticky",
+                              left: 0,
+                              zIndex: 1,
+                              background: "#fff",
+                            }}
+                          >
+                            <a
+                              href={`/rdc/${encodeURIComponent(item.drug_id)}`}
+                              target="_blank"
+                              rel="noreferrer"
+                              style={{
+                                padding: "6px 12px",
+                                background: PRIMARY_COLOR,
+                                borderRadius: 8,
+                                boxShadow: "rgb(86, 86, 86) 4px 3px 0px 0px",
+                                textDecoration: "none",
+                                color: "#fff",
+                                fontSize: 14,
+                                fontWeight: 700,
+                                display: "inline-block",
+                              }}
+                            >
+                              RDC
+                            </a>
+                          </td>
+                          <td
+                            style={{
+                              padding: "12px",
+                              borderBottom: "1px solid #e5e7eb",
+                              fontSize: 14,
+                              color: "#111827",
+                              whiteSpace: "nowrap",
+                            }}
+                          >
+                            {item.drug_name || "-"}
+                          </td>
+                          <td
+                            style={{
+                              padding: "12px",
+                              borderBottom: "1px solid #e5e7eb",
+                              fontSize: 14,
+                              color: "#111827",
+                              textAlign: "center",
+                            }}
+                          >
+                            {item.compound_name || "-"}
+                          </td>
+                          <td
+                            style={{
+                              padding: "12px",
+                              borderBottom: "1px solid #e5e7eb",
+                              fontSize: 14,
+                              color: "#111827",
+                              textAlign: "center",
+                            }}
+                          >
+                            {item.ligand_name || "-"}
+                          </td>
+                          <td
+                            style={{
+                              padding: "12px",
+                              borderBottom: "1px solid #e5e7eb",
+                              fontSize: 14,
+                              color: "#111827",
+                              textAlign: "center",
+                            }}
+                          >
+                            {item.linker_name || "-"}
+                          </td>
+                          <td
+                            style={{
+                              padding: "12px",
+                              borderBottom: "1px solid #e5e7eb",
+                              fontSize: 14,
+                              color: "#111827",
+                              textAlign: "center",
+                            }}
+                          >
+                            {item.chelator_name || "-"}
+                          </td>
+                          <td
+                            style={{
+                              padding: "12px",
+                              borderBottom: "1px solid #e5e7eb",
+                              fontSize: 14,
+                              color: "#111827",
+                              textAlign: "center",
+                            }}
+                          >
+                            {item.radionuclide_name || "-"}
+                          </td>
+                        </tr>
+                      ))}
+                      {rdcList.length === 0 && (
+                        <tr>
+                          <td
+                            colSpan={7}
+                            style={{
+                              padding: "14px 12px",
+                              textAlign: "center",
+                              fontSize: 14,
+                              color: "#64748b",
+                            }}
+                          >
+                            No RDC found for this chemical entity.
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          )}
+        </section>
+      )}
     </main>
   );
 }

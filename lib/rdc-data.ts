@@ -718,3 +718,116 @@ export async function getChemicalDetail(
 
   return { basic, rdc_activity: rdcActivity };
 }
+
+export async function getChemicalRdcList(
+  entityCategory: EntityCategory,
+  entityId: string
+) {
+  const pool = getPool();
+
+  // 查询化学实体基础信息（与 getChemicalDetail 中保持一致）
+  const [rows] = await pool.query<RowDataPacket[]>(
+    `SELECT
+       entity_category,
+       entity_id,
+       name,
+       synonyms,
+       smiles,
+       formula,
+       structure_image,
+       mol2d_path,
+       mol3d_path,
+       pubchem_cid,
+       inchi,
+       inchikey,
+       iupac_name,
+       molecular_weight,
+       complexity,
+       heavy_atom_count,
+       hbond_acceptors,
+       hbond_donors,
+       rotatable_bonds,
+       logp,
+       tpsa,
+       linker_type,
+       radionuclide_symbol,
+       radionuclide_half_life,
+       radionuclide_emission,
+       radionuclide_energy
+     FROM chemical_entity
+     WHERE entity_category = ? AND entity_id = ?
+     LIMIT 1`,
+    [entityCategory, entityId]
+  );
+
+  if (rows.length === 0) {
+    return undefined;
+  }
+
+  const row = rows[0];
+  const basic = {
+    entity_category: row.entity_category as string,
+    entity_id: row.entity_id as string,
+    name: (row.name as string) ?? null,
+    synonyms: (row.synonyms as string) ?? null,
+    smiles: (row.smiles as string) ?? null,
+    formula: (row.formula as string) ?? null,
+    structure_image: (row.structure_image as string) ?? null,
+    mol2d_path: (row.mol2d_path as string) ?? null,
+    mol3d_path: (row.mol3d_path as string) ?? null,
+    pubchem_cid: (row.pubchem_cid as string) ?? null,
+    inchi: (row.inchi as string) ?? null,
+    inchikey: (row.inchikey as string) ?? null,
+    iupac_name: (row.iupac_name as string) ?? null,
+    molecular_weight: toNumber(row.molecular_weight),
+    complexity: toNumber(row.complexity),
+    heavy_atom_count: toNumber(row.heavy_atom_count),
+    hbond_acceptors: toNumber(row.hbond_acceptors),
+    hbond_donors: toNumber(row.hbond_donors),
+    rotatable_bonds: toNumber(row.rotatable_bonds),
+    logp: toNumber(row.logp),
+    tpsa: toNumber(row.tpsa),
+    linker_type: (row.linker_type as string) ?? null,
+    radionuclide_symbol: (row.radionuclide_symbol as string) ?? null,
+    radionuclide_half_life: (row.radionuclide_half_life as string) ?? null,
+    radionuclide_emission: (row.radionuclide_emission as string) ?? null,
+    radionuclide_energy: (row.radionuclide_energy as string) ?? null,
+  };
+
+  // 查询使用该化学实体的所有 RDC 及其关联成分名称
+  const [rdcRows] = await pool.query<RowDataPacket[]>(
+    `SELECT
+       d.drug_id,
+       d.drug_name,
+       d.status,
+       MAX(CASE WHEN dcr.relation_role = 'cold_compound' THEN ce.name END) AS compound_name,
+       MAX(CASE WHEN dcr.relation_role = 'ligand' THEN ce.name END) AS ligand_name,
+       MAX(CASE WHEN dcr.relation_role = 'linker' THEN ce.name END) AS linker_name,
+       MAX(CASE WHEN dcr.relation_role = 'chelator' THEN ce.name END) AS chelator_name,
+       MAX(CASE WHEN dcr.relation_role = 'radionuclide' THEN ce.name END) AS radionuclide_name
+     FROM rdc_drug d
+     JOIN drug_chemical_rel dcr_filter
+       ON d.drug_id = dcr_filter.drug_id
+      AND dcr_filter.chemical_entity_id = ?
+     LEFT JOIN drug_chemical_rel dcr
+       ON d.drug_id = dcr.drug_id
+     LEFT JOIN chemical_entity ce
+       ON ce.entity_id = dcr.chemical_entity_id
+     GROUP BY d.drug_id, d.drug_name, d.status
+     ORDER BY d.drug_id`,
+    [entityId]
+  );
+
+  const rdcs = rdcRows.map((r) => ({
+    drug_id: r.drug_id as string,
+    drug_name: r.drug_name as string,
+    status: (r.status as string) ?? null,
+    compound_name: (r.compound_name as string) ?? null,
+    ligand_name: (r.ligand_name as string) ?? null,
+    linker_name: (r.linker_name as string) ?? null,
+    chelator_name: (r.chelator_name as string) ?? null,
+    radionuclide_name: (r.radionuclide_name as string) ?? null,
+  }));
+
+  return { basic, rdcs };
+}

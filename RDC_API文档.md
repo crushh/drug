@@ -603,6 +603,64 @@ Authorization: Bearer <token>
 }
 ```
 
+### GET `/api/chemical/{entity_category}/{entity_id}/rdc-list`
+
+#### 描述
+
+* 用于化学实体详情页上方的概要信息区域。
+* 传入化学实体类型和化学实体 ID，返回：
+
+  1. `basic`：与上面的接口相同，返回该化学实体的基础信息。
+  2. `rdcs`：一个数组，列出所有使用了该化学实体的 RDC 药物的概要信息。
+
+* 每条 `rdcs[]` 记录包含：
+
+  * `drug_id`：RDC 业务主键（例如 `"RDC-0002"`）
+  * `drug_name`：RDC Name（前端展示用）
+  * `status`：该药物的临床/开发状态
+  * `compound_name`：该 RDC 关联的 cold compound 名称
+  * `ligand_name`：该 RDC 关联的 ligand 名称
+  * `linker_name`：该 RDC 关联的 linker 名称
+  * `chelator_name`：该 RDC 关联的 chelator 名称
+  * `radionuclide_name`：该 RDC 关联的 radionuclide 名称
+
+#### 路径参数
+
+* `entity_category` (string)：同上，允许值：`cold_compound`, `ligand`, `linker`, `chelator`, `radionuclide`
+* `entity_id` (string)：化学实体的业务主键 → `chemical_entity.entity_id`。
+
+#### 查询参数
+
+* 无额外查询参数（如需过滤或分页可后续扩展）。
+
+#### 响应示例
+
+```json
+{
+  "basic": {
+    "entity_category": "compound",
+    "entity_id": "CMP-001",
+    "name": "Cold Compound Name",
+    "synonyms": "CCN; X-123",
+    "smiles": "C1=CC=...N2",
+    "formula": "C10H12N2O",
+    "structure_image": "/img/compound_struct.png"
+  },
+  "rdcs": [
+    {
+      "drug_id": "RDC-0001",
+      "drug_name": "ExampleDrug",
+      "status": "Approved",
+      "compound_name": "ColdCompound-X",
+      "ligand_name": "Ligand-A",
+      "linker_name": "MC-Val-Cit-PABC",
+      "chelator_name": "DOTA",
+      "radionuclide_name": "Lu-177"
+    }
+  ]
+}
+```
+
 ---
 
 ## 9. 根据 drug_id 获取参考文献
