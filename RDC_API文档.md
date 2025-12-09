@@ -243,8 +243,28 @@ Authorization: Bearer <token>
 ```json
 {
   "items": [
-    { "drug_id": "RDC-0001", "drug_name": "Trastuzumab", "status": "Approved" },
-    { "drug_id": "RDC-0002", "drug_name": "Pertuzumab", "status": "Phase 3" }
+    {
+      "drug_id": "RDC02571",
+      "drug_name": "[177Lu]Lu-SibuDAB",
+      "status": "Investigative",
+      "type": "Treatment",
+      "cold_compound_name": "DOTA-SibuDAB-PSMA-617",
+      "ligand_name": "PSMA-617",
+      "linker_name": "ibuprofen",
+      "chelator_name": "DOTA",
+      "radionuclide_name": "177Lu"
+    },
+    {
+      "drug_id": "RDC02572",
+      "drug_name": "[225Ac]Ac-Example-Drug",
+      "status": "Phase 2",
+      "type": "Diagnostic",
+      "cold_compound_name": "Example cold compound",
+      "ligand_name": "Example ligand",
+      "linker_name": "Example linker",
+      "chelator_name": "Example chelator",
+      "radionuclide_name": "225Ac"
+    }
   ]
 }
 ```
@@ -656,6 +676,43 @@ Authorization: Bearer <token>
       "linker_name": "MC-Val-Cit-PABC",
       "chelator_name": "DOTA",
       "radionuclide_name": "Lu-177"
+    }
+  ]
+}
+```
+
+### GET `/api/chemical/search`
+
+#### 描述
+
+* 针对化学实体名称的模糊搜索接口，供下拉自动完成 / 联想搜索使用。
+* 传入化学实体类别和关键字，只在指定类别下按名称模糊匹配。
+* 基于 `chemical_entity.entity_category = :entity_category AND chemical_entity.name LIKE %q%`。
+
+#### 查询参数
+
+* `entity_category` (string, 必填)：化学实体类别；允许值：`cold_compound`, `ligand`, `linker`, `chelator`, `radionuclide`。
+* `q` (string, 必填)：关键字。
+* `limit` (int, 可选，默认 `20`，最大 `100`)：返回的候选数量上限。
+
+#### 响应字段
+
+* `items[]`：候选化学实体列表，每条记录包含：
+  * `entity_id`：化学实体业务主键 → `chemical_entity.entity_id`
+  * `name`：化学实体名称 → `chemical_entity.name`
+
+#### 响应示例
+
+```json
+{
+  "items": [
+    {
+      "entity_id": "CMP-001",
+      "name": "DOTA-SibuDAB-PSMA-617"
+    },
+    {
+      "entity_id": "CMP-002",
+      "name": "PSMA-617"
     }
   ]
 }

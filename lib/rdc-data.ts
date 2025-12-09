@@ -85,18 +85,67 @@ export async function searchDrugs({ q, limit = 20 }: { q: string; limit?: number
   const pool = getPool();
   const query = `%${q.trim()}%`;
   const safeLimit = Math.min(Math.max(limit, 1), 100);
+
   const [rows] = await pool.query<RowDataPacket[]>(
-    `SELECT drug_id, drug_name, status FROM rdc_drug
-     WHERE drug_name LIKE ?
-     ORDER BY drug_name ASC
+    `SELECT
+       d.drug_id,
+       d.drug_name,
+       d.status,
+       d.type,
+       MAX(CASE WHEN dcr.relation_role = 'cold_compound' THEN ce.name END) AS cold_compound_name,
+       MAX(CASE WHEN dcr.relation_role = 'ligand' THEN ce.name END) AS ligand_name,
+       MAX(CASE WHEN dcr.relation_role = 'linker' THEN ce.name END) AS linker_name,
+       MAX(CASE WHEN dcr.relation_role = 'chelator' THEN ce.name END) AS chelator_name,
+       MAX(CASE WHEN dcr.relation_role = 'radionuclide' THEN ce.name END) AS radionuclide_name
+     FROM rdc_drug d
+     LEFT JOIN drug_chemical_rel dcr ON d.drug_id = dcr.drug_id
+     LEFT JOIN chemical_entity ce ON ce.entity_id = dcr.chemical_entity_id
+     WHERE d.drug_name LIKE ?
+     GROUP BY d.drug_id, d.drug_name, d.status, d.type
+     ORDER BY d.drug_name ASC
      LIMIT ?`,
     [query, safeLimit]
   );
-
+  
   return rows.map((row) => ({
     drug_id: row.drug_id as string,
     drug_name: row.drug_name as string,
     status: (row.status as string) ?? null,
+    type: (row.type as string) ?? null,
+    cold_compound_name: (row.cold_compound_name as string) ?? null,
+    ligand_name: (row.ligand_name as string) ?? null,
+    linker_name: (row.linker_name as string) ?? null,
+    chelator_name: (row.chelator_name as string) ?? null,
+    radionuclide_name: (row.radionuclide_name as string) ?? null,
+  }));
+}
+
+export async function searchChemicalEntities({
+  entityCategory,
+  q,
+  limit = 20,
+}: {
+  entityCategory: EntityCategory;
+  q: string;
+  limit?: number;
+}) {
+  const pool = getPool();
+  const query = `%${q.trim()}%`;
+  const safeLimit = Math.min(Math.max(limit, 1), 100);
+
+  const [rows] = await pool.query<RowDataPacket[]>(
+    `SELECT entity_id, name
+     FROM chemical_entity
+     WHERE entity_category = ?
+       AND name LIKE ?
+     ORDER BY name ASC
+     LIMIT ?`,
+    [entityCategory, query, safeLimit]
+  );
+
+  return rows.map((row) => ({
+    entity_id: row.entity_id as string,
+    name: row.name as string,
   }));
 }
 
@@ -127,7 +176,7 @@ export async function listDrugs(params: ListDrugsParams) {
        d.drug_name,
        d.status,
        d.type,
-       MAX(CASE WHEN dcr.relation_role = 'compound' THEN ce.name END) AS cold_compound_name,
+       MAX(CASE WHEN dcr.relation_role = 'cold_compound' THEN ce.name END) AS cold_compound_name,
        MAX(CASE WHEN dcr.relation_role = 'ligand' THEN ce.name END) AS ligand_name,
        MAX(CASE WHEN dcr.relation_role = 'linker' THEN ce.name END) AS linker_name,
        MAX(CASE WHEN dcr.relation_role = 'chelator' THEN ce.name END) AS chelator_name,

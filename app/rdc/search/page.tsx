@@ -3,21 +3,20 @@
 import { useEffect, useMemo, useState } from "react";
 import { getEntityCategoryColor } from "@/lib/entity-category-colors";
 
-type SearchItem = { drug_id: string; drug_name: string; status: string | null };
+type SearchItem = {
+  drug_id: string;
+  drug_name: string;
+  status: string | null;
+  type: string | null;
+  cold_compound_name: string | null;
+  ligand_name: string | null;
+  linker_name: string | null;
+  chelator_name: string | null;
+  radionuclide_name: string | null;
+};
 
 type DetailResponse = {
-  general?: {
-    drug_id: string;
-    drug_name: string;
-    status: string | null;
-    type: string | null;
-  };
   chemicals?: {
-    compound_name?: string | null;
-    ligand_name?: string | null;
-    linker_name?: string | null;
-    chelator_name?: string | null;
-    radionuclide_name?: string | null;
     entities?: Record<string, Array<{ entity_id: string; name: string }>>;
   };
 };
@@ -95,9 +94,8 @@ export default function SearchListPage({
 
       <div style={{ display: "grid", gap: 16 }}>
         {items.map((it) => {
-          const d = details[it.drug_id];
-          const g = d?.general;
-          const c = d?.chemicals;
+          const detail = details[it.drug_id];
+          const c = detail?.chemicals;
 
           const line = (
             <div
@@ -140,12 +138,12 @@ export default function SearchListPage({
               <hr style={{ border: 0, borderTop: "2px solid #1F2937", margin: "12px 0" }} />
 
               <div style={{ display: "grid", gridTemplateColumns: "1fr auto", rowGap: 10, columnGap: 12, alignItems: "center" }}>
-                <div style={{ color: "#111827" }}>RDC Name： <span style={{ fontWeight: 600 }}>{g?.drug_name ?? it.drug_name}</span></div>
+                <div style={{ color: "#111827" }}>RDC Name： <span style={{ fontWeight: 600 }}>{it.drug_name}</span></div>
                 <div>
                   {/* placeholder to keep grid aligned with button column */}
                 </div>
 
-                <div style={{ color: "#111827" }}>Drug Status： <span>{g?.status ?? it.status ?? "-"}</span></div>
+                <div style={{ color: "#111827" }}>Drug Status： <span>{it.status ?? "-"}</span></div>
                 <div>
                   <a
                     href={`/rdc/${it.drug_id}`}
@@ -165,10 +163,10 @@ export default function SearchListPage({
                   </a>
                 </div>
 
-                <div style={{ color: "#fb923c" }}>Type： {g?.type ?? "-"}</div>
+                <div style={{ color: "#fb923c" }}>Type： {it.type ?? "-"}</div>
                 <div />
 
-                <div style={{ color: "#16a34a" }}>cold compound Name： {c?.compound_name ?? "-"}</div>
+                <div style={{ color: "#16a34a" }}>cold compound Name： {it.cold_compound_name ?? "-"}</div>
                 <a
                   href={(() => {
                     const id = chemicalFirstEntityId(it.drug_id, "cold_compound");
@@ -188,7 +186,7 @@ export default function SearchListPage({
                   cold compound Info
                 </a>
 
-                <div>ligand Name： {c?.ligand_name ?? "-"}</div>
+                <div>ligand Name： {it.ligand_name ?? "-"}</div>
                 <a
                   href={(() => {
                     const id = chemicalFirstEntityId(it.drug_id, "ligand");
@@ -208,7 +206,7 @@ export default function SearchListPage({
                   ligand Info
                 </a>
 
-                <div>linker Name： {c?.linker_name ?? "-"}</div>
+                <div>linker Name： {it.linker_name ?? "-"}</div>
                 <a
                   href={(() => {
                     const id = chemicalFirstEntityId(it.drug_id, "linker");
@@ -228,7 +226,7 @@ export default function SearchListPage({
                   linker Info
                 </a>
 
-                <div>chelator Name： {c?.chelator_name ?? "-"}</div>
+                <div>chelator Name： {it.chelator_name ?? "-"}</div>
                 <a
                   href={(() => {
                     const id = chemicalFirstEntityId(it.drug_id, "chelator");
@@ -248,7 +246,7 @@ export default function SearchListPage({
                   chelator Info
                 </a>
 
-                <div>radionuclide Name： {c?.radionuclide_name ?? "-"}</div>
+                <div>radionuclide Name： {it.radionuclide_name ?? "-"}</div>
                 <a
                   href={(() => {
                     const id = chemicalFirstEntityId(it.drug_id, "radionuclide");
