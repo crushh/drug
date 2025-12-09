@@ -1,7 +1,7 @@
 ﻿"use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { getEntityCategoryColor, PRIMARY_COLOR } from "@/lib/entity-category-colors";
 
 type StatusOption = { value: string; label: string };
@@ -99,7 +99,7 @@ export default function HomePage() {
   // Top fuzzy search
   const [q, setQ] = useState("");
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<SearchTabKey>("rdc");
+  const searchParams = useSearchParams();
 
   // Bottom dependent selects
   const [statusOptions, setStatusOptions] = useState<StatusOption[]>([]);
@@ -113,6 +113,17 @@ export default function HomePage() {
   const [chemicalQ, setChemicalQ] = useState("");
   const [chemicalItems, setChemicalItems] = useState<ChemicalItem[]>([]);
   const [chemicalLoading, setChemicalLoading] = useState(false);
+
+  const activeTabParam = searchParams.get("tab");
+  const activeTab: SearchTabKey =
+    activeTabParam === "rdc" ||
+    activeTabParam === "cold_compound" ||
+    activeTabParam === "ligand" ||
+    activeTabParam === "linker" ||
+    activeTabParam === "chelator" ||
+    activeTabParam === "radionuclide"
+      ? (activeTabParam as SearchTabKey)
+      : "rdc";
 
   const isRdcMode = activeTab === "rdc";
 
@@ -212,7 +223,16 @@ export default function HomePage() {
       <p style={{ marginTop: 0, color: "#475569" }}>快速查找放射性药物缀合体（RDC）与相关实体。</p>
 
       {/* Top: six submenu tiles */}
-      <TileMenu activeKey={activeTab} onSelect={setActiveTab} />
+      <TileMenu
+        activeKey={activeTab}
+        onSelect={(key) => {
+          if (key === "rdc") {
+            router.push("/");
+          } else {
+            router.push(`/?tab=${key}`);
+          }
+        }}
+      />
 
       {isRdcMode ? (
         <>

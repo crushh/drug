@@ -28,12 +28,12 @@ export default function RootLayout({
                   Search
                 </button>
                 <div className="dropdown-menu" role="menu">
-                  <Link href="/rdc/search" role="menuitem">Search for RDC</Link>
-                  <Link href="/rdc/search?category=compound" role="menuitem">Search for Compound</Link>
-                  <Link href="/rdc/search?category=ligand" role="menuitem">Search for Ligand</Link>
-                  <Link href="/rdc/search?category=linker" role="menuitem">Search for Linker</Link>
-                  <Link href="/rdc/search?category=chelator" role="menuitem">Search for Chelator</Link>
-                  <Link href="/rdc/search?category=radionuclide" role="menuitem">Search for Radionuclide</Link>
+                  <Link href="/?tab=rdc" role="menuitem">Search for RDC</Link>
+                  <Link href="/?tab=cold_compound" role="menuitem">Search for Compound</Link>
+                  <Link href="/?tab=ligand" role="menuitem">Search for Ligand</Link>
+                  <Link href="/?tab=linker" role="menuitem">Search for Linker</Link>
+                  <Link href="/?tab=chelator" role="menuitem">Search for Chelator</Link>
+                  <Link href="/?tab=radionuclide" role="menuitem">Search for Radionuclide</Link>
                 </div>
               </div>
             </nav>
