@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { getEntityCategoryColor, PRIMARY_COLOR } from "@/lib/entity-category-colors";
 
@@ -95,7 +95,7 @@ function TileMenu({ activeKey, onSelect }: { activeKey: SearchTabKey; onSelect: 
   );
 }
 
-export default function HomePage() {
+function HomePageContent() {
   // Top fuzzy search
   const [q, setQ] = useState("");
   const router = useRouter();
@@ -471,5 +471,13 @@ export default function HomePage() {
         })()
       )}
     </main>
+  );
+}
+
+export default function HomePage() {
+  return (
+    <Suspense fallback={null}>
+      <HomePageContent />
+    </Suspense>
   );
 }

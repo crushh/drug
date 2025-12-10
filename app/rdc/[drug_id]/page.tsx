@@ -27,21 +27,6 @@ type General = {
   pubchem_sid: string | null;
 };
 
-type HumanActivity = {
-  clinical_trial_number: string | null;
-  indication: string | null;
-  patients: string | null;
-  dosage: string | null;
-  frequency: string | null;
-  results_description: string | null;
-  purpose: string | null;
-  clinical_endpoint: string | null;
-  endpoint_period: string | null;
-  efficacy_description: string | null;
-  adverse_events_summary: string | null;
-  security_indicators: string | null;
-};
-
 type Chemicals = {
   compound_name?: string | null;
   ligand_name?: string | null;

@@ -286,7 +286,7 @@ export function HumanActivitySection({
                     ["security indication", row.security_indicators],
                   ].map(([label, value], i) => (
                     <div
-                      key={label}
+                      key={i}
                       style={{
                         display: "grid",
                         gridTemplateColumns: "220px 1fr",
@@ -393,7 +393,7 @@ export function AnimalSection({
                               ["Biodist result image", renderValue(shared.biodist_result_image)],
                               ["Biodist description", renderValue(shared.biodist_description)],
                             ].map(([label, value], i, arr) => (
-                              <tr key={label}>
+                              <tr key={i}>
                                 <td style={{ padding: "8px 10px", borderTop: i === 0 ? "1px solid #d4d4d8" : "1px solid #e5e7eb", borderBottom: i === arr.length - 1 ? "1px solid #d4d4d8" : "1px solid #e5e7eb", width: "26%", fontWeight: 700, color: "#0f172a", background: "#f8fafc", fontSize: 14 }}>
                                   {label}
                                 </td>
@@ -432,7 +432,7 @@ export function AnimalSection({
                           ["Description of efficacy", renderValue(row.efficacy_description)],
                           ["Adverse reactions", renderValue(row.adverse_reactions)],
                         ].map(([label, value], i, arr) => (
-                          <tr key={label}>
+                          <tr key={i}>
                             <td style={{ padding: "8px 10px", borderTop: i === 0 ? "1px solid #d4d4d8" : "1px solid #e5e7eb", borderBottom: i === arr.length - 1 ? "1px solid #d4d4d8" : "1px solid #e5e7eb", width: "26%", fontWeight: 700, color: "#0f172a", background: "#f8fafc", fontSize: 14 }}>
                               {label}
                             </td>
@@ -545,7 +545,7 @@ export function InVitroSection({
                         ["Partition coefficient-Value", value],
                         ["Partition coefficient-Description", renderValue(row.method_description)],
                       ].map(([label, val], i, arr) => (
-                        <tr key={label}>
+                        <tr key={i}>
                           <td style={{ padding: "8px 10px", borderTop: i === 0 ? "1px solid #d4d4d8" : "1px solid #e5e7eb", borderBottom: i === arr.length - 1 ? "1px solid #d4d4d8" : "1px solid #e5e7eb", width: "26%", fontWeight: 700, color: "#0f172a", background: "#f8fafc" }}>
                             {label}
                           </td>
@@ -574,7 +574,7 @@ export function InVitroSection({
                         ["affinity-value", value],
                         ["affinity-method description", renderValue(row.method_description)],
                       ].map(([label, val], i, arr) => (
-                        <tr key={label}>
+                        <tr key={i}>
                           <td style={{ padding: "8px 10px", borderTop: i === 0 ? "1px solid #d4d4d8" : "1px solid #e5e7eb", borderBottom: i === arr.length - 1 ? "1px solid #d4d4d8" : "1px solid #e5e7eb", width: "26%", fontWeight: 700, color: "#0f172a", background: "#f8fafc", fontSize: 14 }}>
                             {label}
                           </td>
