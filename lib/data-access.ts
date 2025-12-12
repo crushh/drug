@@ -225,6 +225,10 @@ export function findDrugByName(drugName: string) {
     chebi_id: match.chebiId ?? null,
     pubchem_cid: match.pubchemCid ?? null,
     pubchem_sid: match.pubchemSid ?? null,
+    radiochemical_method_description: match.radiochemicalMethodDescription ?? null,
+    radiochemical_yield: match.radiochemicalYield ?? null,
+    radiochemical_purity: match.radiochemicalPurity ?? null,
+    specific_activity: match.specificActivity ?? null,
     updated_at: match.updatedAt,
   };
 }
@@ -248,6 +252,10 @@ export function getDrugDetail(drugId: string, options: DrugDetailOptions = {}) {
       chebi_id: drug.chebiId ?? null,
       pubchem_cid: drug.pubchemCid ?? null,
       pubchem_sid: drug.pubchemSid ?? null,
+      radiochemical_method_description: drug.radiochemicalMethodDescription ?? null,
+      radiochemical_yield: drug.radiochemicalYield ?? null,
+      radiochemical_purity: drug.radiochemicalPurity ?? null,
+      specific_activity: drug.specificActivity ?? null,
       created_at: drug.createdAt,
       updated_at: drug.updatedAt,
     },

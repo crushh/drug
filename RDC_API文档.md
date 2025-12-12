@@ -351,7 +351,7 @@ Authorization: Bearer <token>
 
 **药物主信息来自 `rdc_drug`：**
 
-* `drug_id`、`external_id`、`drug_name`、`drug_synonyms`、`status`、`type`（治疗 or 诊断）、`smiles`、`structure_image`、`chebi_id`、`pubchem_cid`、`pubchem_sid`、`created_at`、`updated_at`。
+* `drug_id`、`external_id`、`drug_name`、`drug_synonyms`、`status`、`type`（治疗 or 诊断）、`smiles`、`structure_image`、`chebi_id`、`pubchem_cid`、`pubchem_sid`、`radiochemical_method_description`、`radiochemical_yield`、`radiochemical_purity`、`specific_activity`、`created_at`、`updated_at`。
 
 **化学成分来自 `drug_chemical_rel` + `chemical_entity`：**
 
@@ -422,7 +422,11 @@ Authorization: Bearer <token>
     "structure_image": "/img/RDC-0002.png",
     "chebi_id": "CHEBI:12345",
     "pubchem_cid": "123456",
-    "pubchem_sid": "654321"
+    "pubchem_sid": "654321",
+    "radiochemical_method_description": "Labeled with Lu-177 via DOTA chelation under mild conditions.",
+    "radiochemical_yield": "85%",
+    "radiochemical_purity": "≥98%",
+    "specific_activity": "37 GBq/µmol"
   },
   "chemicals": {
     "compound_name": "ColdCompound-X",

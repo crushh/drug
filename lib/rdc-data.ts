@@ -252,6 +252,10 @@ export async function findDrugByName(drugName: string) {
        chebi_id,
        pubchem_cid,
        pubchem_sid,
+       radiochemical_method_description,
+       radiochemical_yield,
+       radiochemical_purity,
+       specific_activity,
        updated_at
      FROM rdc_drug
      WHERE drug_name = ?
@@ -276,6 +280,10 @@ export async function findDrugByName(drugName: string) {
     chebi_id: (row.chebi_id as string) ?? null,
     pubchem_cid: (row.pubchem_cid as string) ?? null,
     pubchem_sid: (row.pubchem_sid as string) ?? null,
+    radiochemical_method_description: (row.radiochemical_method_description as string) ?? null,
+    radiochemical_yield: (row.radiochemical_yield as string) ?? null,
+    radiochemical_purity: (row.radiochemical_purity as string) ?? null,
+    specific_activity: (row.specific_activity as string) ?? null,
     updated_at: toDateTime(row.updated_at),
   };
 }
@@ -295,6 +303,10 @@ export async function getDrugDetail(drugId: string, options: DrugDetailOptions =
        chebi_id,
        pubchem_cid,
        pubchem_sid,
+       radiochemical_method_description,
+       radiochemical_yield,
+       radiochemical_purity,
+       specific_activity,
        created_at,
        updated_at
      FROM rdc_drug
@@ -324,6 +336,10 @@ export async function getDrugDetail(drugId: string, options: DrugDetailOptions =
       chebi_id: (row.chebi_id as string) ?? null,
       pubchem_cid: (row.pubchem_cid as string) ?? null,
       pubchem_sid: (row.pubchem_sid as string) ?? null,
+      radiochemical_method_description: (row.radiochemical_method_description as string) ?? null,
+      radiochemical_yield: (row.radiochemical_yield as string) ?? null,
+      radiochemical_purity: (row.radiochemical_purity as string) ?? null,
+      specific_activity: (row.specific_activity as string) ?? null,
       created_at: toDateTime(row.created_at),
       updated_at: toDateTime(row.updated_at),
     },

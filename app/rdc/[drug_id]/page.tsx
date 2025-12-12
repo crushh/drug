@@ -241,6 +241,10 @@ export default function DrugDetailPage({ params }: { params: { drug_id: string }
 	                  ["chelator Name", c?.chelator_name ?? "-"],
 	                  ["radionuclide Name", c?.radionuclide_name ?? "-"],
 	                  ["chebi_id", g.chebi_id ?? "-"],
+                    ["radiochemical_method_description", (g as any).radiochemical_method_description ?? "-"],
+	                  ["radiochemical_yield", (g as any).radiochemical_yield ?? "-"],
+	                  ["radiochemical_purity", (g as any).radiochemical_purity ?? "-"],
+	                  ["specific_activity", (g as any).specific_activity ?? "-"],
 	                  ["pubchem_cid", g.pubchem_cid ?? "-"],
 	                  ["pubchem_sid", g.pubchem_sid ?? "-"],
 	                ].map(([label, value], i, arr) => {

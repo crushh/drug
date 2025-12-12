@@ -27,6 +27,10 @@ export interface RdcDrug {
   chebiId?: string;
   pubchemCid?: string;
   pubchemSid?: string;
+   radiochemicalMethodDescription?: string;
+   radiochemicalYield?: string;
+   radiochemicalPurity?: string;
+   specificActivity?: string;
   notes?: string;
   createdAt: string;
   updatedAt: string;

@@ -13,6 +13,7 @@ import {
   type InVitro,
 } from "@/app/components/activity-sections";
 import { getEntityCategoryColor, PRIMARY_COLOR } from "@/lib/entity-category-colors";
+import { buildAssetUrl } from "@/lib/assets";
 
 type Basic = {
   entity_category: string;
@@ -70,8 +71,6 @@ type ChemicalDetail = {
   rdcs?: RdcSummary[];
 };
 
-const ASSET_BASE = (process.env.NEXT_PUBLIC_ASSET_BASE ?? "").replace(/\/+$/, "");
-
 type FieldBoxProps = {
   label: string;
   value: ReactNode;
@@ -91,15 +90,6 @@ function FieldBox({ label, value, style }: FieldBoxProps) {
       <div style={{ color: "#111827", marginTop: 4, fontSize: 14 }}>{renderValue(value)}</div>
     </div>
   );
-}
-
-function buildAssetUrl(path?: string | null, folder?: string) {
-  if (!path) return null;
-  if (/^https?:\/\//i.test(path)) return path;
-  const normalized = path.replace(/^\/+/, "");
-  const prefix = folder ? `${folder.replace(/\/+$/, "")}/` : "";
-  const base = ASSET_BASE ? `${ASSET_BASE}/` : "";
-  return `${base}${prefix}${normalized}`;
 }
 
 function RdcActivityCard({ activity }: { activity: RdcActivity }) {
@@ -256,11 +246,14 @@ export default function ChemicalDetailPage({
   const rdcActivity = detail?.rdc_activity ?? [];
   const rdcList = detail?.rdcs ?? [];
 
-  const basicRows: Array<[string, ReactNode]> = [
+  const basicCommonRows: Array<[string, ReactNode]> = [
     ["entity_category", basic?.entity_category ?? "-"],
     ["entity_id", basic?.entity_id ?? "-"],
     ["name", basic?.name ?? "-"],
     ["synonyms", basic?.synonyms ?? "-"],
+  ];
+
+  const basicNonRadionuclideRows: Array<[string, ReactNode]> = [
     ["smiles", basic?.smiles ?? "-"],
     ["formula", basic?.formula ?? "-"],
     ["pubchem_cid", basic?.pubchem_cid ?? "-"],
@@ -276,11 +269,19 @@ export default function ChemicalDetailPage({
     ["logp", basic?.logp ?? "-"],
     ["tpsa", basic?.tpsa ?? "-"],
     ["linker_type", basic?.linker_type ?? "-"],
+  ];
+
+  const basicRadionuclideRows: Array<[string, ReactNode]> = [
     ["radionuclide_symbol", basic?.radionuclide_symbol ?? "-"],
     ["radionuclide_half_life", basic?.radionuclide_half_life ?? "-"],
     ["radionuclide_emission", basic?.radionuclide_emission ?? "-"],
     ["radionuclide_energy", basic?.radionuclide_energy ?? "-"],
   ];
+
+  const basicRows: Array<[string, ReactNode]> =
+    entity_category === "radionuclide"
+      ? [...basicCommonRows, ...basicRadionuclideRows]
+      : [...basicCommonRows, ...basicNonRadionuclideRows];
 
   return (
     <main>
@@ -321,6 +322,7 @@ export default function ChemicalDetailPage({
           {openBasic && (
             <div style={{ display: "grid", gap: 12, padding: 12, background: "#fff" }}>
               {(() => {
+                const showStructureSection = entity_category !== "radionuclide";
                 const structureName =
                   typeof basic.structure_image === "string" && basic.structure_image
                     ? `${basic.structure_image}.png`
@@ -368,7 +370,7 @@ export default function ChemicalDetailPage({
                             </tr>
                           );
 
-                          if (label !== "synonyms") {
+                          if (label !== "synonyms" || !showStructureSection) {
                             return row;
                           }
 

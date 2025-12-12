@@ -21,7 +21,7 @@ function makeAlphaColor(hex: string, alphaHex: string) {
 function getChemicalLabel(category: ChemicalEntityCategory) {
   switch (category) {
     case "cold_compound":
-      return "Compound";
+      return "Cold Compound";
     case "ligand":
       return "Ligand";
     case "linker":
@@ -39,7 +39,7 @@ function TileMenu({ activeKey, onSelect }: { activeKey: SearchTabKey; onSelect: 
   const items = useMemo<Array<{ key: SearchTabKey; label: string }>>(
     () => [
       { key: "rdc", label: "Search for RDC" },
-      { key: "cold_compound", label: "Search for Compound" },
+      { key: "cold_compound", label: "Search for Cold Compound" },
       { key: "ligand", label: "Search for Ligand" },
       { key: "linker", label: "Search for Linker" },
       { key: "chelator", label: "Search for Chelator" },

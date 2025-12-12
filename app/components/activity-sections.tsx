@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo } from "react";
 import type { CSSProperties, ReactNode } from "react";
+import { buildAssetUrl } from "@/lib/assets";
 
 export type HumanActivity = {
   clinical_trial_number: string | null;
@@ -109,13 +110,13 @@ export function formatDosage(symbols: string | null, value: number | string | nu
 }
 
 const TBR_LABELS: Record<string, string> = {
-  tumor_blood: "肿瘤/血液 T/B",
-  tumor_muscle: "肿瘤/肌肉 T/B",
-  tumor_kidney: "肿瘤/肾脏 T/B",
-  tumor_salivary_glands: "肿瘤/唾液腺 T/B",
-  tumor_liver: "肿瘤/肝脏 T/B",
-  tumor_lung: "肿瘤/肺部 T/B",
-  tumor_heart: "肿瘤/心脏 T/B",
+  tumor_blood: "Tumor_Blood",
+  tumor_muscle: "Tumor_Muscle",
+  tumor_kidney: "Tumor_Kidney",
+  tumor_salivary_glands: "Tumor_Salivary_glands",
+  tumor_liver: "Tumor_Liver",
+  tumor_lung: "Tumor_Lung",
+  tumor_heart: "Tumor_Heart",
 };
 
 export type DetectionTbrRow = {
@@ -369,6 +370,16 @@ export function AnimalSection({
               {biodistGroups.map((group, idx) => {
                 const shared = group.shared;
                 const dosage = formatDosage(shared.dosage_symbols, shared.dosage_value, shared.dosage_unit);
+                const biodistImageUrl = buildAssetUrl(shared.biodist_result_image ?? undefined, "activity_data");
+                const biodistImageNode = biodistImageUrl ? (
+                  <img
+                    src={biodistImageUrl}
+                    alt="Biodist result"
+                    style={{ maxWidth: "100%", borderRadius: 4 }}
+                  />
+                ) : (
+                  renderValue(shared.biodist_result_image)
+                );
                 return (
                   <div key={idx} style={{ border: "1px solid #e5e7eb", borderRadius: 6, display: "grid", gap: 10, background: "#fff" }}>
                     <div
@@ -390,7 +401,7 @@ export function AnimalSection({
                               ["Metabolism", renderValue(shared.metabolism)],
                               ["Excretion", renderValue(shared.excretion)],
                               ["Tumor retention time", renderValue(shared.tumor_retention_time)],
-                              ["Biodist result image", renderValue(shared.biodist_result_image)],
+                              ["Biodist result image", biodistImageNode],
                               ["Biodist description", renderValue(shared.biodist_description)],
                             ].map(([label, value], i, arr) => (
                               <tr key={i}>
