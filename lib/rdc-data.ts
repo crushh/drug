@@ -586,7 +586,7 @@ function mapMeasurement(row: RowDataPacket) {
   return {
     measurement_type: (row.measurement_type as string) ?? null,
     measurement_symbols: (row.measurement_symbols as string) ?? null,
-    measurement_value: toNumber(row.measurement_value),
+    measurement_value: (row.measurement_value as string) ?? null,
     measurement_unit: (row.measurement_unit as string) ?? null,
     method_description: (row.method_description as string) ?? null,
   };

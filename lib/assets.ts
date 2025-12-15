@@ -6,7 +6,7 @@ export function buildAssetUrl(path?: string | null, folder?: string) {
   const normalized = path.replace(/^\/+/, "");
   const prefix = folder ? `${folder.replace(/\/+$/, "")}/` : "";
   const base = ASSET_BASE ? `${ASSET_BASE}/` : "";
-  return `${base}${prefix}${normalized}`;
+  return `${base}${prefix}${normalized}.png`;
 }
 
 export { ASSET_BASE };

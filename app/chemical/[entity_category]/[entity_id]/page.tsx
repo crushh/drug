@@ -325,10 +325,9 @@ export default function ChemicalDetailPage({
                 const showStructureSection = entity_category !== "radionuclide";
                 const structureName =
                   typeof basic.structure_image === "string" && basic.structure_image
-                    ? `${basic.structure_image}.png`
+                    ? `${basic.structure_image}`
                     : null;
                 const structureUrl = buildAssetUrl(structureName, "structure");
-                const displayStructureUrl = structureUrl ? `${structureUrl}?imageMogr2/format/png` : null;
                 const mol2dName = typeof basic.mol2d_path === "string" && basic.mol2d_path ? `${basic.mol2d_path}.mol` : null;
                 const mol3dName = typeof basic.mol3d_path === "string" && basic.mol3d_path ? `${basic.mol3d_path}.sdf` : null;
                 const mol2d = buildAssetUrl(mol2dName, "rdc_2d");

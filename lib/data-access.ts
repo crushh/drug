@@ -376,6 +376,8 @@ function mapEfficacy(record: AnimalInVivoEfficacy) {
 
 function buildInVitroBlock(drugId: string) {
   const studies = inVitroByDrug.get(drugId) ?? [];
+    console.log("buildInVitroBlock studies =", studies); // 新增这一行
+
   const overview = studies.map((study) => ({
     in_vitro_id: study.inVitroId,
     study_overview: study.studyOverview ?? null,
@@ -393,7 +395,6 @@ function buildInVitroBlock(drugId: string) {
       measurementGroups[key].push(mapMeasurement(measurement));
     }
   }
-
   return {
     studies: overview,
     ...measurementGroups,
