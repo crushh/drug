@@ -1,0 +1,57 @@
+﻿priority,错误类型,错误数,问题说明,修复建议,涉及表,样例
+1,数字格式错误 (DECIMAL_INVALID),6736,SQL 要求 DECIMAL，CSV 中却是范围、均值±误差、文本或其它非纯数字。,只保留一个纯数字，或者调整表结构增加 raw_value/min/max/error 等字段。,animal_in_vivo_biodist(6349); chemical_affinity(310); animal_in_vivo_efficacy(77),"- `chemical_affinity.csv` 行 2: `affinity_value` = `50.0 ± 4.4` 
+- `chemical_affinity.csv` 行 3: `affinity_value` = `29.0 ± 0.6` 
+- `chemical_affinity.csv` 行 4: `affinity_value` = `2.8±1.0` 
+- `chemical_affinity.csv` 行 5: `affinity_value` = `2.8±1.0` 
+- `chemical_affinity.csv` 行 6: `affinity_value` = `（3.2 ± 0.9） * 10^-7` "
+2,枚举值错误 (ENUM_INVALID),3798,字段值不在 SQL ENUM 允许范围内。,按 SQL 里的枚举值统一修改，注意大小写。,drug_chemical_rel(2047); chemical_entity(1751),"- `chemical_entity.csv` 行 2: `entity_category` = `Radionuclide` 允许值: cold_compound, ligand, linker, chelator, radionuclide
+- `chemical_entity.csv` 行 3: `entity_category` = `Radionuclide` 允许值: cold_compound, ligand, linker, chelator, radionuclide
+- `chemical_entity.csv` 行 4: `entity_category` = `Radionuclide` 允许值: cold_compound, ligand, linker, chelator, radionuclide
+- `chemical_entity.csv` 行 5: `entity_category` = `Radionuclide` 允许值: cold_compound, ligand, linker, chelator, radionuclide
+- `chemical_entity.csv` 行 6: `entity_category` = `Radionuclide` 允许值: cold_compound, ligand, linker, chelator, radionuclide"
+3,外键缺失 (FK_MISSING_PARENT),1583,关联表引用的父表 ID 不存在。,先补齐父表记录。如果一个单元格有多个 ID，需要拆成多行。,chemical_affinity(589); drug_indication(265); in_vitro_measurement(200); human_activity(155); rdc_drug_reference(144); drug_target(99); animal_in_vivo_biodist(88); animal_in_vivo_study(21); animal_in_vivo_efficacy(15); in_vitro(6); drug_chemical_rel(1),"- `drug_target.csv` 行 370: `drug_id` = `RDC00694` drug_id -> rdc_drug.drug_id
+- `drug_target.csv` 行 606: `drug_id` = `RDC01124` drug_id -> rdc_drug.drug_id
+- `drug_target.csv` 行 695: `drug_id` = `RDC01244` drug_id -> rdc_drug.drug_id
+- `drug_target.csv` 行 723: `drug_id` = `RDC01300` drug_id -> rdc_drug.drug_id
+- `drug_target.csv` 行 730: `drug_id` = `RDC01312` drug_id -> rdc_drug.drug_id"
+4,日期格式错误 (DATE_INVALID),1471,SQL 要求 DATE，CSV 日期不是 YYYY-MM-DD。,统一改成 YYYY-MM-DD，例如 20-Jun-25 -> 2025-06-20。,reference(1471),"- `reference.csv` 行 2: `publication_date` = `20-Jun-25` 
+- `reference.csv` 行 3: `publication_date` = `24-Sep-21` 
+- `reference.csv` 行 4: `publication_date` = `19-Jan-11` 
+- `reference.csv` 行 5: `publication_date` = `13-May-25` 
+- `reference.csv` 行 6: `publication_date` = `7-Oct-22` "
+5,唯一键重复 (UNIQUE_DUPLICATE),504,该表的 UNIQUE KEY 被重复使用。,去重，保留一行；如需保留多条，需调整唯一键设计。,chemical_entity(304); rdc_drug_reference(108); drug_indication(59); reference(16); animal_in_vivo_study(9); in_vitro(6); rdc_drug(1); drug_target(1),"- `rdc_drug.csv` 行 738: `drug_id` = `RDC01070` uk_drug_id: drug_id=RDC01070; first line=694
+- `chemical_entity.csv` 行 269: `entity_category,entity_id` = `RDC|RDC00116` uk_entity_category_id: entity_category=RDC, entity_id=RDC00116; first line=70
+- `chemical_entity.csv` 行 269: `entity_id` = `RDC00116` uk_entity_id: entity_id=RDC00116; first line=70
+- `chemical_entity.csv` 行 287: `entity_category,entity_id` = `RDC|RDC00515` uk_entity_category_id: entity_category=RDC, entity_id=RDC00515; first line=286
+- `chemical_entity.csv` 行 287: `entity_id` = `RDC00515` uk_entity_id: entity_id=RDC00515; first line=286"
+6,单元格包含多个 ID (MULTIPLE_IDS),204,关联字段中出现逗号或分号分隔的多个 ID。,关联表应该一行一个关联，请拆成多行。,drug_indication(149); drug_target(55),"- `drug_target.csv` 行 16: `target_id` = `TAR0023, TAR0065, TAR0064` 
+- `drug_target.csv` 行 24: `target_id` = `TAR0023, TAR0020` 
+- `drug_target.csv` 行 42: `target_id` = `TAR0015, TAR0023` 
+- `drug_target.csv` 行 43: `target_id` = `TAR0015, TAR0023` 
+- `drug_target.csv` 行 44: `target_id` = `TAR0015, TAR0023` "
+7,字段过长 (VALUE_TOO_LONG),95,CSV 值长度超过 SQL VARCHAR 限制。,缩短内容，或把 SQL 字段改成更大的 VARCHAR/TEXT。,chemical_entity(32); human_activity(29); animal_in_vivo_biodist(24); animal_in_vivo_efficacy(10),"- `chemical_entity.csv` 行 191: `radiochemical_yield` = `95.4 ± 1.3% for 99mTc(CO)₃-DTPA-cPT` max=32, actual=35
+- `chemical_entity.csv` 行 477: `radiochemical_yield` = `18.1-61.8% (n=10, decay uncorrected)` max=32, actual=36
+- `chemical_entity.csv` 行 477: `radiochemical_purity` = `>90% (Assumed from stability data)` max=32, actual=34
+- `chemical_entity.csv` 行 478: `radiochemical_purity` = `>90% (Assumed from stability data)` max=32, actual=34
+- `chemical_entity.csv` 行 481: `radiochemical_yield` = `~85% (Automated), >95% (Manual, precursor ≥5μM)` max=32, actual=47"
+8,必填字段为空 (REQUIRED_EMPTY),45,SQL 中该字段为 NOT NULL，CSV 中为空。,补齐该字段，或删除该行无效数据。,drug_chemical_rel(24); drug_target(10); in_vitro_measurement(6); rdc_drug_reference(3); drug_indication(1); animal_in_vivo_biodist(1),"- `drug_target.csv` 行 1993: `target_id` = `` 
+- `drug_target.csv` 行 1994: `target_id` = `` 
+- `drug_target.csv` 行 2001: `target_id` = `` 
+- `drug_target.csv` 行 2009: `target_id` = `` 
+- `drug_target.csv` 行 2010: `target_id` = `` "
+9,空表头 (HEADER_BLANK),21,CSV 存在空列名。,删除多余空列，或者填写正确字段名。,rdc_drug(14); in_vitro(4); drug_indication(3),"- `rdc_drug.csv` 行 1: `#18` = `` 
+- `rdc_drug.csv` 行 1: `#19` = `` 
+- `rdc_drug.csv` 行 1: `#20` = `` 
+- `rdc_drug.csv` 行 1: `#21` = `` 
+- `rdc_drug.csv` 行 1: `#22` = `` "
+10,日期时间格式错误 (DATETIME_INVALID),18,SQL 要求 DATETIME，CSV 格式不符合 YYYY-MM-DD HH:MM:SS。,改成 YYYY-MM-DD HH:MM:SS，或留空让数据库使用默认时间。,animal_in_vivo_biodist(18),"- `animal_in_vivo_biodist.csv` 行 1591: `created_at` = `-` 
+- `animal_in_vivo_biodist.csv` 行 1596: `created_at` = `-` 
+- `animal_in_vivo_biodist.csv` 行 1597: `created_at` = `-` 
+- `animal_in_vivo_biodist.csv` 行 1597: `updated_at` = `-` 
+- `animal_in_vivo_biodist.csv` 行 1598: `created_at` = `-` "
+11,表头使用了别名 (HEADER_ALIAS),4,CSV 表头与建表字段不完全一致，脚本已按内置规则映射。,建议把 CSV 表头直接改成 SQL 里的字段名。,rdc_drug(1); drug_indication(1); animal_in_vivo_study(1); animal_in_vivo_biodist(1),"- `rdc_drug.csv` 行 1: `Type` = `type` Type -> type
+- `drug_indication.csv` 行 1: `RDC-ID` = `drug_id` RDC-ID -> drug_id
+- `animal_in_vivo_study.csv` 行 1: `drug-id` = `drug_id` drug-id -> drug_id
+- `animal_in_vivo_biodist.csv` 行 1: `Type` = `biodist_type` Type -> biodist_type"
+12,非建表字段 (HEADER_IGNORED),2,该列不在 SQL 中，脚本按配置忽略。,如果确定要入库，需先在 SQL 中增加字段；否则可从 CSV 删除。,rdc_drug(1); animal_in_vivo_biodist(1),"- `rdc_drug.csv` 行 1: `MOA` = `` 
+- `animal_in_vivo_biodist.csv` 行 1: `Cell lines` = `` "

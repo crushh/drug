@@ -39,7 +39,7 @@ CREATE TABLE IF NOT EXISTS `rdc_drug` (
   INDEX `idx_drug_name` (`drug_name`),
   INDEX `idx_status` (`status`),
   INDEX `idx_pubchem_cid` (`pubchem_cid`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='药物主数据';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Drug master data';
 
 -- ---------------------------------------------------------------------
 -- 核心：靶点主表及关联
@@ -55,7 +55,7 @@ CREATE TABLE IF NOT EXISTS `target` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `uk_target_id` (`target_id`),
   UNIQUE KEY `uk_name_external` (`name`, `external_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='靶点主数据';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Target master data';
 
 CREATE TABLE IF NOT EXISTS `drug_target` (
   `id` INT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '自增主键（关联行标识）',
@@ -72,7 +72,7 @@ CREATE TABLE IF NOT EXISTS `drug_target` (
     ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `fk_dt_target` FOREIGN KEY (`target_id`) REFERENCES `target`(`target_id`)
     ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='药物与靶点多对多关联';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Drug-target many-to-many relationship';
 
 -- ---------------------------------------------------------------------
 -- 核心：适应症主表及关联
@@ -89,7 +89,7 @@ CREATE TABLE IF NOT EXISTS `indication` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `uk_indication_id` (`indication_id`),
   UNIQUE KEY `uk_name_code` (`name`, `icd11_code`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='适应症主数据';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Indication master data';
 
 CREATE TABLE IF NOT EXISTS `drug_indication` (
   `id` INT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '自增主键（关联行标识）',
@@ -106,7 +106,7 @@ CREATE TABLE IF NOT EXISTS `drug_indication` (
     ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `fk_di_indication` FOREIGN KEY (`indication_id`) REFERENCES `indication`(`indication_id`)
     ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='药物与适应症多对多关联';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Drug-indication many-to-many relationship';
 
 -- ---------------------------------------------------------------------
 -- 合并后的化学实体（compound/ligand/linker/chelator/radionuclide）
@@ -154,7 +154,7 @@ CREATE TABLE IF NOT EXISTS `chemical_entity` (
   UNIQUE KEY `uk_entity_id` (`entity_id`),
   INDEX `idx_ce_name` (`name`),
   INDEX `idx_ce_category` (`entity_category`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='合并后的化学实体主数据';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Merged chemical entity master data';
 
 CREATE TABLE IF NOT EXISTS `drug_chemical_rel` (
   `id` INT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '自增主键（关联行标识）',
@@ -170,10 +170,10 @@ CREATE TABLE IF NOT EXISTS `drug_chemical_rel` (
   INDEX `idx_dcr_drug` (`drug_id`),
   INDEX `idx_dcr_entity` (`relation_role`, `chemical_entity_id`),
   CONSTRAINT `fk_dcr_drug` FOREIGN KEY (`drug_id`) REFERENCES `rdc_drug`(`drug_id`)
-    ON DELETE CASCADE ON UPDATE CASCADE,
+    ON DELETE CASCADE ON UPDATE CASCADE
   -- CONSTRAINT `fk_dcr_entity` FOREIGN KEY (`relation_role`, `chemical_entity_id`) REFERENCES `chemical_entity`(`entity_category`, `entity_id`)
   --   ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='药物与化学实体多对多关联';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Drug-chemical entity many-to-many relationship';
 
 CREATE TABLE IF NOT EXISTS `chemical_affinity` (
   `id` INT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '自增主键（记录标识）',
@@ -192,7 +192,7 @@ CREATE TABLE IF NOT EXISTS `chemical_affinity` (
   INDEX `idx_ca_entity` (`chemical_entity_id`),
   CONSTRAINT `fk_ca_entity` FOREIGN KEY (`chemical_entity_id`) REFERENCES `chemical_entity`(`entity_id`)
     ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='化学实体亲和力信息';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Chemical entity affinity information';
 
 -- ---------------------------------------------------------------------
 -- In vitro 数据与统一测量表
@@ -211,7 +211,7 @@ CREATE TABLE IF NOT EXISTS `in_vitro` (
   INDEX `idx_iv_drug` (`drug_id`),
   CONSTRAINT `fk_iv_drug` FOREIGN KEY (`drug_id`) REFERENCES `rdc_drug`(`drug_id`)
     ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='体外研究头信息';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='In vitro study header information';
 
 CREATE TABLE IF NOT EXISTS `in_vitro_measurement` (
   `id` INT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '自增主键（明细记录）',
@@ -229,7 +229,7 @@ CREATE TABLE IF NOT EXISTS `in_vitro_measurement` (
   INDEX `idx_ivm_category` (`measurement_category`),
   CONSTRAINT `fk_ivm_ref` FOREIGN KEY (`in_vitro_ref_id`) REFERENCES `in_vitro`(`in_vitro_id`)
     ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='体外研究测量明细';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='In vitro study measurement details';
 
 -- ---------------------------------------------------------------------
 -- 人体活性数据
@@ -264,7 +264,7 @@ CREATE TABLE IF NOT EXISTS `human_activity` (
   INDEX `idx_ha_trial` (`clinical_trial_number`),
   CONSTRAINT `fk_ha_drug` FOREIGN KEY (`drug_id`) REFERENCES `rdc_drug`(`drug_id`)
     ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='人体活性/临床研究数据';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Human activity and clinical study data';
 
 -- ---------------------------------------------------------------------
 -- 动物体内研究（头表 + 明细）
@@ -282,7 +282,7 @@ CREATE TABLE IF NOT EXISTS `animal_in_vivo_study` (
   INDEX `idx_study_drug` (`drug_id`),
   CONSTRAINT `fk_study_drug` FOREIGN KEY (`drug_id`) REFERENCES `rdc_drug`(`drug_id`)
     ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='动物体内研究头信息';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Animal in vivo study header information';
 
 CREATE TABLE IF NOT EXISTS `animal_in_vivo_biodist` (
   `id` INT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '自增主键（明细记录）',
@@ -312,9 +312,9 @@ CREATE TABLE IF NOT EXISTS `animal_in_vivo_biodist` (
   INDEX `idx_bd_time` (`detection_time`),
   CONSTRAINT `fk_bd_study` FOREIGN KEY (`study_ref_id`) REFERENCES `animal_in_vivo_study`(`study_id`)
     ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='动物体内研究生物分布明细';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Animal in vivo study biodistribution details';
 
---- pk 研究表暂时不需要，先注释掉
+-- pk 研究表暂时不需要，先注释掉
 -- CREATE TABLE IF NOT EXISTS `animal_in_vivo_pk` (
 --   `id` INT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '自增主键（明细记录）',
 --   `study_ref_id` VARCHAR(128) NOT NULL COMMENT 'Business ID (animal_in_vivo_study.study_id)',
@@ -331,7 +331,7 @@ CREATE TABLE IF NOT EXISTS `animal_in_vivo_biodist` (
 --   INDEX `idx_pk_study` (`study_ref_id`),
 --   CONSTRAINT `fk_pk_study` FOREIGN KEY (`study_ref_id`) REFERENCES `animal_in_vivo_study`(`study_id`)
 --     ON DELETE CASCADE ON UPDATE CASCADE
--- ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='动物体内研究 PK 明细';
+-- ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Animal in vivo study PK details';
 
 CREATE TABLE IF NOT EXISTS `animal_in_vivo_efficacy` (
   `id` INT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '自增主键（明细记录）',
@@ -349,7 +349,7 @@ CREATE TABLE IF NOT EXISTS `animal_in_vivo_efficacy` (
   INDEX `idx_eff_study` (`study_ref_id`),
   CONSTRAINT `fk_eff_study` FOREIGN KEY (`study_ref_id`) REFERENCES `animal_in_vivo_study`(`study_id`)
     ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='动物体内研究疗效明细';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Animal in vivo study efficacy details';
 
 -- ---------------------------------------------------------------------
 -- 参考文献主表及药物文献关联
@@ -375,7 +375,7 @@ CREATE TABLE IF NOT EXISTS `reference` (
   UNIQUE KEY `uk_reference_id` (`reference_id`),
   INDEX `idx_ref_doi` (`doi`),
   INDEX `idx_ref_pmid` (`pmid`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='参考文献主数据';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Reference master data';
 
 CREATE TABLE IF NOT EXISTS `rdc_drug_reference` (
   `id` INT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '自增主键（关联行标识）',
@@ -392,7 +392,7 @@ CREATE TABLE IF NOT EXISTS `rdc_drug_reference` (
     ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `fk_drug_ref_reference` FOREIGN KEY (`reference_id`) REFERENCES `reference`(`reference_id`)
     ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='药物与文献多对多关联';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Drug-reference many-to-many relationship';
 
 -- 根据 drug_id 查询参考文献（接口 /api/reference/{drug_id} 使用）:
 -- SELECT
