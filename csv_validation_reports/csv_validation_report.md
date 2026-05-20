@@ -6,7 +6,7 @@
 
 - 文件数: 16
 - 数据行数: 27855
-- 问题数: 14481
+- 问题数: 7650
 
 ## 优先修复建议
 
@@ -24,38 +24,18 @@
 | drug_target | 1981 |
 | drug_indication | 2368 |
 | drug_chemical_rel | 0 |
-| chemical_affinity | 280 |
+| chemical_affinity | 590 |
 | in_vitro | 1568 |
 | in_vitro_measurement | 1318 |
-| human_activity | 841 |
+| human_activity | 869 |
 | animal_in_vivo_study | 2611 |
-| animal_in_vivo_biodist | 3049 |
-| animal_in_vivo_efficacy | 185 |
+| animal_in_vivo_biodist | 6049 |
+| animal_in_vivo_efficacy | 271 |
 | rdc_drug_reference | 2239 |
 
 ## 问题分组
 
-### 1. 数字格式错误 (6736 条)
-
-**类型**: `DECIMAL_INVALID`
-
-**问题**: SQL 要求 DECIMAL，CSV 中却是范围、均值±误差、文本或其它非纯数字。
-
-**修复建议**: 只保留一个纯数字，或者调整表结构增加 raw_value/min/max/error 等字段。
-
-**涉及表**: animal_in_vivo_biodist: 6349, chemical_affinity: 310, animal_in_vivo_efficacy: 77
-
-**样例**:
-- `chemical_affinity.csv` 行 2: `affinity_value` = `50.0 ± 4.4` 
-- `chemical_affinity.csv` 行 3: `affinity_value` = `29.0 ± 0.6` 
-- `chemical_affinity.csv` 行 4: `affinity_value` = `2.8±1.0` 
-- `chemical_affinity.csv` 行 5: `affinity_value` = `2.8±1.0` 
-- `chemical_affinity.csv` 行 6: `affinity_value` = `（3.2 ± 0.9） * 10^-7` 
-- `chemical_affinity.csv` 行 7: `affinity_value` = `（3.5 ± 0.3） * 10^-8` 
-- `chemical_affinity.csv` 行 8: `affinity_value` = `（1.1 ± 0.2）*10^−7` 
-- `chemical_affinity.csv` 行 9: `affinity_value` = `（1.0 ± 0.2）*10^−8` 
-
-### 2. 枚举值错误 (3798 条)
+### 1. 枚举值错误 (3798 条)
 
 **类型**: `ENUM_INVALID`
 
@@ -75,7 +55,7 @@
 - `chemical_entity.csv` 行 8: `entity_category` = `Radionuclide` 允许值: cold_compound, ligand, linker, chelator, radionuclide
 - `chemical_entity.csv` 行 9: `entity_category` = `Radionuclide` 允许值: cold_compound, ligand, linker, chelator, radionuclide
 
-### 3. 外键缺失 (1583 条)
+### 2. 外键缺失 (1583 条)
 
 **类型**: `FK_MISSING_PARENT`
 
@@ -95,7 +75,7 @@
 - `drug_target.csv` 行 1374: `drug_id` = `RDC02187` drug_id -> rdc_drug.drug_id
 - `drug_target.csv` 行 1431: `drug_id` = `RDC02269` drug_id -> rdc_drug.drug_id
 
-### 4. 日期格式错误 (1471 条)
+### 3. 日期格式错误 (1471 条)
 
 **类型**: `DATE_INVALID`
 
@@ -115,7 +95,7 @@
 - `reference.csv` 行 8: `publication_date` = `13-Apr-11` 
 - `reference.csv` 行 9: `publication_date` = `15-Jun-07` 
 
-### 5. 唯一键重复 (504 条)
+### 4. 唯一键重复 (504 条)
 
 **类型**: `UNIQUE_DUPLICATE`
 
@@ -135,7 +115,7 @@
 - `chemical_entity.csv` 行 290: `entity_id` = `RDC00513` uk_entity_id: entity_id=RDC00513; first line=284
 - `chemical_entity.csv` 行 294: `entity_category,entity_id` = `RDC|RDC00514` uk_entity_category_id: entity_category=RDC, entity_id=RDC00514; first line=285
 
-### 6. 单元格包含多个 ID (204 条)
+### 5. 单元格包含多个 ID (204 条)
 
 **类型**: `MULTIPLE_IDS`
 
@@ -155,27 +135,7 @@
 - `drug_target.csv` 行 52: `target_id` = `TAR0063,TAR0023` 
 - `drug_target.csv` 行 59: `target_id` = `TAR0015, TAR0023` 
 
-### 7. 字段过长 (95 条)
-
-**类型**: `VALUE_TOO_LONG`
-
-**问题**: CSV 值长度超过 SQL VARCHAR 限制。
-
-**修复建议**: 缩短内容，或把 SQL 字段改成更大的 VARCHAR/TEXT。
-
-**涉及表**: chemical_entity: 32, human_activity: 29, animal_in_vivo_biodist: 24, animal_in_vivo_efficacy: 10
-
-**样例**:
-- `chemical_entity.csv` 行 191: `radiochemical_yield` = `95.4 ± 1.3% for 99mTc(CO)₃-DTPA-cPT` max=32, actual=35
-- `chemical_entity.csv` 行 477: `radiochemical_yield` = `18.1-61.8% (n=10, decay uncorrected)` max=32, actual=36
-- `chemical_entity.csv` 行 477: `radiochemical_purity` = `>90% (Assumed from stability data)` max=32, actual=34
-- `chemical_entity.csv` 行 478: `radiochemical_purity` = `>90% (Assumed from stability data)` max=32, actual=34
-- `chemical_entity.csv` 行 481: `radiochemical_yield` = `~85% (Automated), >95% (Manual, precursor ≥5μM)` max=32, actual=47
-- `chemical_entity.csv` 行 486: `radiochemical_purity` = `>98% (inferred from clinical study)` max=32, actual=35
-- `chemical_entity.csv` 行 487: `radiochemical_purity` = `>98% (inferred from clinical study)` max=32, actual=35
-- `chemical_entity.csv` 行 525: `radiochemical_yield` = `60% (reported, varied 15-80% by batch)` max=32, actual=38
-
-### 8. 必填字段为空 (45 条)
+### 6. 必填字段为空 (45 条)
 
 **类型**: `REQUIRED_EMPTY`
 
@@ -195,7 +155,7 @@
 - `drug_target.csv` 行 2017: `target_id` = `` 
 - `drug_target.csv` 行 2018: `target_id` = `` 
 
-### 9. 空表头 (21 条)
+### 7. 空表头 (21 条)
 
 **类型**: `HEADER_BLANK`
 
@@ -215,7 +175,7 @@
 - `rdc_drug.csv` 行 1: `#24` = `` 
 - `rdc_drug.csv` 行 1: `#25` = `` 
 
-### 10. 日期时间格式错误 (18 条)
+### 8. 日期时间格式错误 (18 条)
 
 **类型**: `DATETIME_INVALID`
 
@@ -235,7 +195,7 @@
 - `animal_in_vivo_biodist.csv` 行 1603: `created_at` = `-` 
 - `animal_in_vivo_biodist.csv` 行 1603: `updated_at` = `-` 
 
-### 11. 表头使用了别名 (4 条)
+### 9. 表头使用了别名 (6 条)
 
 **类型**: `HEADER_ALIAS`
 
@@ -243,24 +203,12 @@
 
 **修复建议**: 建议把 CSV 表头直接改成 SQL 里的字段名。
 
-**涉及表**: rdc_drug: 1, drug_indication: 1, animal_in_vivo_study: 1, animal_in_vivo_biodist: 1
+**涉及表**: rdc_drug: 2, animal_in_vivo_biodist: 2, drug_indication: 1, animal_in_vivo_study: 1
 
 **样例**:
 - `rdc_drug.csv` 行 1: `Type` = `type` Type -> type
+- `rdc_drug.csv` 行 1: `MOA` = `moa` MOA -> moa
 - `drug_indication.csv` 行 1: `RDC-ID` = `drug_id` RDC-ID -> drug_id
 - `animal_in_vivo_study.csv` 行 1: `drug-id` = `drug_id` drug-id -> drug_id
 - `animal_in_vivo_biodist.csv` 行 1: `Type` = `biodist_type` Type -> biodist_type
-
-### 12. 非建表字段 (2 条)
-
-**类型**: `HEADER_IGNORED`
-
-**问题**: 该列不在 SQL 中，脚本按配置忽略。
-
-**修复建议**: 如果确定要入库，需先在 SQL 中增加字段；否则可从 CSV 删除。
-
-**涉及表**: rdc_drug: 1, animal_in_vivo_biodist: 1
-
-**样例**:
-- `rdc_drug.csv` 行 1: `MOA` = `` 
-- `animal_in_vivo_biodist.csv` 行 1: `Cell lines` = `` 
+- `animal_in_vivo_biodist.csv` 行 1: `Cell lines` = `cell_lines` Cell lines -> cell_lines

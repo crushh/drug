@@ -44,16 +44,13 @@ TABLE_ORDER = [
 ]
 
 HEADER_ALIASES = {
-    "rdc_drug": {"Type": "type"},
+    "rdc_drug": {"Type": "type", "MOA": "moa"},
     "drug_indication": {"RDC-ID": "drug_id"},
     "animal_in_vivo_study": {"drug-id": "drug_id"},
-    "animal_in_vivo_biodist": {"Type": "biodist_type"},
+    "animal_in_vivo_biodist": {"Type": "biodist_type", "Cell lines": "cell_lines"},
 }
 
-IGNORED_HEADERS = {
-    "rdc_drug": {"MOA"},
-    "animal_in_vivo_biodist": {"Cell lines"},
-}
+IGNORED_HEADERS: dict[str, set[str]] = {}
 
 DEFAULT_COLUMNS = {"id", "created_at", "updated_at"}
 
@@ -303,6 +300,12 @@ def parse_schema(schema_path: Path) -> dict[str, TableDef]:
     return tables
 
 
+def ordered_table_names(tables: dict[str, TableDef]) -> list[str]:
+    ordered = [table for table in TABLE_ORDER if table in tables]
+    ordered.extend(table for table in tables if table not in TABLE_ORDER)
+    return ordered
+
+
 def is_empty(value: Any) -> bool:
     return value is None or str(value).strip() == ""
 
@@ -528,6 +531,7 @@ def make_report(
     inserted_counts: dict[str, int],
     files_count: int,
     data_rows_count: int,
+    table_order: list[str],
 ) -> None:
     output_dir.mkdir(parents=True, exist_ok=True)
     grouped: dict[tuple[str, str, str], list[Issue]] = defaultdict(list)
@@ -556,7 +560,7 @@ def make_report(
     md.append("")
     md.append(f"| {ZH['table']} | {ZH['count']} |")
     md.append("|---|---:|")
-    for table in TABLE_ORDER:
+    for table in table_order:
         if table in inserted_counts:
             md.append(f"| {table} | {inserted_counts[table]} |")
     md.append("")
@@ -632,13 +636,14 @@ def run(schema_path: Path, csv_dir: Path, output_dir: Path) -> int:
         return 2
 
     tables = parse_schema(schema_path)
+    table_order = ordered_table_names(tables)
     issues: list[Issue] = []
     rows_by_table: dict[str, list[dict[str, str]]] = {}
     inserted_counts: dict[str, int] = {}
     files_count = 0
     data_rows_count = 0
 
-    for table_name in TABLE_ORDER:
+    for table_name in table_order:
         table_def = tables.get(table_name)
         if table_def is None:
             continue
@@ -673,7 +678,7 @@ def run(schema_path: Path, csv_dir: Path, output_dir: Path) -> int:
             # rows with multiple foreign-key failures.
             pass
 
-    make_report(output_dir, issues, inserted_counts, files_count, data_rows_count)
+    make_report(output_dir, issues, inserted_counts, files_count, data_rows_count, table_order)
     print("\u6821\u9a8c\u5b8c\u6210")
     print(f"\u95ee\u9898\u6570: {len(issues)}")
     print(f"\u62a5\u544a\u76ee\u5f55: {output_dir}")
