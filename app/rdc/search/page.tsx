@@ -89,7 +89,7 @@ export default function SearchListPage({
       <h1 style={{ margin: 0 }}>Search for Radioligand Drug Conjugates</h1>
       <p style={{ marginTop: 6, color: "#475569" }}>You are searching for: {qParam || "(empty)"}</p>
 
-      {error && <p style={{ color: "#b91c1c" }}>错误：{error}</p>}
+      {error && <p style={{ color: "#b91c1c" }}>Error: {error}</p>}
       {loading && <p>Loading…</p>}
 
       <div style={{ display: "grid", gap: 16 }}>

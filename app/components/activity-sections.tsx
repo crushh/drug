@@ -228,7 +228,7 @@ export function HumanActivitySection({
       >
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <span style={{ fontSize: 16 }}>{open ? "▾" : "▸"}</span>
-          <span>详细活性数据 - 人体活性数据</span>
+          <span>Detailed Activity Data - Human Activity Data</span>
         </div>
         <span style={{ fontSize: 13, fontWeight: 600 }}>
           Click To Hide/Show <span style={{ fontWeight: 800 }}>{items.length}</span> Activity Data Related to This Level
@@ -355,7 +355,7 @@ export function AnimalSection({
       >
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <span style={{ fontSize: 16 }}>{open ? "▾" : "▸"}</span>
-          <span>动物活性数据</span>
+          <span>Animal Activity Data</span>
         </div>
         <span style={{ fontSize: 13, fontWeight: 600 }}>
           Click To Hide/Show Activity Data Related to This Level
@@ -532,7 +532,7 @@ export function InVitroSection({
       >
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <span style={{ fontSize: 16 }}>{open ? "▾" : "▸"}</span>
-          <span>体外数据</span>
+          <span>In Vitro Data</span>
         </div>
         <span style={{ fontSize: 13, fontWeight: 600 }}>
           Click To Hide/Show Activity Data Related to This Level

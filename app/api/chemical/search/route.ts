@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
       return validationError("missing query parameter entity_category", ["entity_category"]);
     }
     if (!validateEntityCategory(categoryParam)) {
-      return validationError(`entity_category 不支持 ${categoryParam}`, ["entity_category"]);
+      return validationError(`entity_category does not support ${categoryParam}`, ["entity_category"]);
     }
     if (!q || !q.trim()) {
       return validationError("missing query parameter q", ["q"]);
@@ -37,4 +37,3 @@ export async function GET(request: NextRequest) {
     return serverError(message);
   }
 }
-

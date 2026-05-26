@@ -50,47 +50,47 @@ function TileMenu({ activeKey, onSelect }: { activeKey: SearchTabKey; onSelect: 
 
   return (
     <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }}>
-      {items.map((it) => (
-        <button
-          key={it.key}
-          type="button"
-          onClick={() => onSelect(it.key)}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            height: 88,
-            borderRadius: 12,
-            border: (() => {
-              const base =
-                it.key === "rdc"
-                  ? PRIMARY_COLOR
-                  : getEntityCategoryColor(it.key as ChemicalEntityCategory);
-              const width = it.key === activeKey ? 2 : 1;
-              return `${width}px solid ${base}`;
-            })(),
-            background: (() => {
-              if (it.key === activeKey) {
-                const base =
-                  it.key === "rdc"
-                    ? PRIMARY_COLOR
-                    : getEntityCategoryColor(it.key as ChemicalEntityCategory);
-                return makeAlphaColor(base, "1A");
-              }
-              return "#fff";
-            })(),
-            textDecoration: "none",
-            color:
-              it.key === "rdc"
-                ? "#0f172a"
-                : getEntityCategoryColor(it.key as ChemicalEntityCategory),
-            boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
-            cursor: "pointer",
-          }}
-        >
-          {it.label}
-        </button>
-      ))}
+      {items.map((it) => {
+        const color =
+          it.key === "rdc" ? PRIMARY_COLOR : getEntityCategoryColor(it.key as ChemicalEntityCategory);
+        return (
+          <button
+            key={it.key}
+            type="button"
+            onClick={() => onSelect(it.key)}
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 8,
+              height: 140,
+              padding: "12px 10px 14px",
+              borderRadius: 8,
+              border: `3px solid ${color}`,
+              background: makeAlphaColor(color, it.key === activeKey ? "33" : "1A"),
+              textDecoration: "none",
+              color,
+              boxShadow: "none",
+              cursor: "pointer",
+              font: "inherit",
+            }}
+          >
+            <span
+              aria-hidden="true"
+              style={{
+                width: 84,
+                height: 84,
+                background: color,
+                display: "block",
+                WebkitMask: "url('/linker.svg') center / contain no-repeat",
+                mask: "url('/linker.svg') center / contain no-repeat",
+              }}
+            />
+            <span style={{ fontSize: 16, lineHeight: 1.2, color }}>{it.label}</span>
+          </button>
+        );
+      })}
     </div>
   );
 }
@@ -203,7 +203,7 @@ function HomePageContent() {
       });
       const res = await fetch(`/api/chemical/search?${params.toString()}`, { cache: "no-store" });
       if (!res.ok) {
-        // 简单忽略错误，不在首页弹错误框
+        // Ignore errors here instead of showing an alert on the homepage.
         setChemicalItems([]);
         return;
       }
@@ -220,7 +220,7 @@ function HomePageContent() {
   return (
     <main style={{ padding: "24px" }}>
       <h1 style={{ margin: 0, marginBottom: 12 }}>RDC Portal</h1>
-      <p style={{ marginTop: 0, color: "#475569" }}>快速查找放射性药物缀合体（RDC）与相关实体。</p>
+      <p style={{ marginTop: 0, color: "#475569" }}>Quickly find radiopharmaceutical drug conjugates (RDCs) and related entities.</p>
 
       {/* Top: six submenu tiles */}
       <TileMenu
@@ -255,7 +255,7 @@ function HomePageContent() {
                 onKeyDown={(e) => {
                   if (e.key === "Enter") doSearch();
                 }}
-                placeholder="输入 RDC 名称，按 Enter 搜索"
+                placeholder="Enter an RDC name and press Enter to search"
                 style={{
                   flex: 1,
                   height: 40,
@@ -296,7 +296,7 @@ function HomePageContent() {
           >
             <h3 style={{ marginTop: 0 }}>Search for RDC Entries by Status:</h3>
             <div style={{ fontSize: 12, color: "#64748b", marginBottom: 8 }}>
-              Tips: 先选择状态，再选择 RDC 名称。
+              Tip: Select a status first, then choose an RDC name.
             </div>
 
             <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 8 }}>
@@ -314,7 +314,7 @@ function HomePageContent() {
                   background: "#fff",
                 }}
               >
-                <option value="">Step 1: 请选择一个状态</option>
+                <option value="">Step 1: Select a status</option>
                 {statusOptions.map((opt) => (
                   <option key={opt.value} value={opt.value}>
                     {opt.label}
@@ -352,7 +352,7 @@ function HomePageContent() {
                   background: "#fff",
                 }}
               >
-                <option value="">Step 2: 请选择一个 RDC 名称</option>
+                <option value="">Step 2: Select an RDC name</option>
                 {namesByStatus.map((it) => (
                   <option key={it.drug_id} value={it.drug_name}>
                     {it.drug_name}
@@ -395,7 +395,7 @@ function HomePageContent() {
             >
               <h3 style={{ marginTop: 0 }}>{`Search for ${label}:`}</h3>
               <div style={{ fontSize: 12, color: "#64748b", marginBottom: 8 }}>
-                {`Tips: 输入 ${label} 名称，按 Enter 搜索，点击结果进入详情页。`}
+                {`Tip: Enter a ${label} name, press Enter to search, then click a result to view details.`}
               </div>
               <div style={{ display: "flex", gap: 8 }}>
                 <input
@@ -405,7 +405,7 @@ function HomePageContent() {
                   onKeyDown={(e) => {
                     if (e.key === "Enter") doChemicalSearch();
                   }}
-                  placeholder={`输入 ${label} 名称，按 Enter 搜索`}
+                  placeholder={`Enter a ${label} name and press Enter to search`}
                   style={{
                     flex: 1,
                     height: 40,
@@ -470,6 +470,122 @@ function HomePageContent() {
           );
         })()
       )}
+
+      <footer
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+          gap: 40,
+          marginTop: 42,
+          padding: "0 12px 28px",
+          color: "#6b7280",
+        }}
+      >
+        <section>
+          <h2
+            style={{
+              margin: "0 0 10px",
+              paddingBottom: 2,
+              borderBottom: "1px solid #008b8b",
+              color: "#008b8b",
+              fontSize: 20,
+              lineHeight: 1.2,
+            }}
+          >
+            Citation
+          </h2>
+          <p style={{ margin: 0, fontSize: 14, lineHeight: 1.45 }}>
+            L. T. Shen, X. N. Sun, Z. Chen, Y. Guo, Z. Y. Shen, Y. Song, W. X. Xin,
+            H. Y. Ding, X. Y. Ma, W. B. Xu, W. Y. Zhou, J. X. Che, L. L. Tan,
+            L. S. Chen, S. Q. Chen, X. W. Dong *, L. Fang *, F. Zhu *.
+            ADCdb: the database of antibody-drug conjugates.{" "}
+            <strong style={{ color: "#008b8b", fontStyle: "italic" }}>Nucleic Acids Research.</strong>{" "}
+            52(D1): D1097-D1109 (2024).{" "}
+            <a
+              href="https://pubmed.ncbi.nlm.nih.gov/37831118/"
+              target="_blank"
+              rel="noreferrer"
+              style={{ color: "#008b8b", textDecoration: "none" }}
+            >
+              PMID: 37831118
+            </a>
+          </p>
+        </section>
+
+        <section>
+          <h2
+            style={{
+              margin: "0 0 10px",
+              paddingBottom: 2,
+              borderBottom: "1px solid #008b8b",
+              color: "#008b8b",
+              fontSize: 20,
+              lineHeight: 1.2,
+            }}
+          >
+            Visitor Map
+          </h2>
+        </section>
+
+        <section>
+          <h2
+            style={{
+              margin: "0 0 10px",
+              paddingBottom: 2,
+              borderBottom: "1px solid #008b8b",
+              color: "#008b8b",
+              fontSize: 20,
+              lineHeight: 1.2,
+            }}
+          >
+            Correspondence
+          </h2>
+          <div style={{ display: "grid", gap: 8, fontSize: 14, lineHeight: 1.35 }}>
+            <p style={{ margin: 0 }}>
+              <strong>Prof. Feng ZHU</strong> (zhufeng@zju.edu.cn)
+              <br />
+              Lab of Innovative Drug Research and Bioinformatics{" "}
+              <a
+                href="https://idrblab.org/"
+                target="_blank"
+                rel="noreferrer"
+                aria-label="Open Lab of Innovative Drug Research and Bioinformatics"
+                style={{ color: "#008b8b", textDecoration: "none", fontWeight: 700 }}
+              >
+                ↗
+              </a>
+            </p>
+            <p style={{ margin: 0 }}>
+              <strong>Prof. Xiaowu DONG</strong> (dongxw@zju.edu.cn)
+              <br />
+              Lab of New Intervention Strategy for Innovation Drug R&amp;D{" "}
+              <a
+                href="https://www.zju.edu.cn/"
+                target="_blank"
+                rel="noreferrer"
+                aria-label="Open Lab of New Intervention Strategy for Innovation Drug R and D"
+                style={{ color: "#008b8b", textDecoration: "none", fontWeight: 700 }}
+              >
+                ↗
+              </a>
+            </p>
+            <p style={{ margin: 0 }}>
+              <strong>Prof. Luo FANG</strong> (fangluo@zjcc.org.cn)
+              <br />
+              Pharmacy Department of Zhejiang Cancer Hospital{" "}
+              <a
+                href="https://www.zjcc.org.cn/"
+                target="_blank"
+                rel="noreferrer"
+                aria-label="Open Pharmacy Department of Zhejiang Cancer Hospital"
+                style={{ color: "#008b8b", textDecoration: "none", fontWeight: 700 }}
+              >
+                ↗
+              </a>
+            </p>
+          </div>
+        </section>
+      </footer>
     </main>
   );
 }

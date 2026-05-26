@@ -56,6 +56,15 @@ function toDateTime(value: unknown): string | null {
   return Number.isNaN(date.getTime()) ? null : date.toISOString();
 }
 
+function isMissingTableError(error: unknown) {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error &&
+    (error as { code?: unknown }).code === "ER_NO_SUCH_TABLE"
+  );
+}
+
 function normalizeSort(sort?: string) {
   switch (sort) {
     case "drug_name:asc":
@@ -464,10 +473,18 @@ async function fetchAnimalInVivo(drugId: string) {
   const studyIds = studies.map((row) => row.study_id as string);
   const placeholders = studyIds.map(() => "?").join(",");
 
-  const [pkRows] = await pool.query<RowDataPacket[]>(
-    `SELECT * FROM animal_in_vivo_pk WHERE study_ref_id IN (${placeholders}) ORDER BY id ASC`,
-    studyIds
-  );
+  let pkRows: RowDataPacket[] = [];
+  try {
+    const [rows] = await pool.query<RowDataPacket[]>(
+      `SELECT * FROM animal_in_vivo_pk WHERE study_ref_id IN (${placeholders}) ORDER BY id ASC`,
+      studyIds
+    );
+    pkRows = rows;
+  } catch (error) {
+    if (!isMissingTableError(error)) {
+      throw error;
+    }
+  }
   const [biodistRows] = await pool.query<RowDataPacket[]>(
     `SELECT * FROM animal_in_vivo_biodist WHERE study_ref_id IN (${placeholders}) ORDER BY id ASC`,
     studyIds

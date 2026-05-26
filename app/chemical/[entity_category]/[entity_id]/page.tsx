@@ -290,7 +290,7 @@ export default function ChemicalDetailPage({
         Category: {entity_category} | Entity ID: {entity_id}
       </p> */}
 
-      {error && <p style={{ color: "#b91c1c" }}>错误：{error}</p>}
+      {error && <p style={{ color: "#b91c1c" }}>Error: {error}</p>}
       {loading && <p>Loading…</p>}
 
       {!!basic && (
@@ -564,7 +564,7 @@ export default function ChemicalDetailPage({
               cursor: "pointer",
             }}
           >
-            <span>与此目标相关的 RDC 完整列表</span>
+            <span>Complete List of RDCs Related to This Target</span>
             <span style={{ fontSize: 16 }}>{openRdcSection ? "▾" : "▸"}</span>
           </div>
 

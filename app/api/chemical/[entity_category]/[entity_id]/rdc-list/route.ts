@@ -14,31 +14,31 @@ export async function GET(
   const { entity_category: categoryParam, entity_id: entityId } = context.params;
 
   if (!categoryParam) {
-    return validationError("缺少路径参数 entity_category", ["entity_category"]);
+    return validationError("Missing path parameter entity_category", ["entity_category"]);
   }
   if (!entityId) {
-    return validationError("缺少路径参数 entity_id", ["entity_id"]);
+    return validationError("Missing path parameter entity_id", ["entity_id"]);
   }
 
   if (!validateEntityCategory(categoryParam)) {
-    return validationError(`entity_category 不支持 ${categoryParam}`, ["entity_category"]);
+    return validationError(`entity_category does not support ${categoryParam}`, ["entity_category"]);
   }
 
   try {
     const detail = await getChemicalRdcList(categoryParam as EntityCategory, entityId);
 
     if (!detail) {
-      return notFound(`未找到化学实体 ${entityId}`);
+      return notFound(`Chemical entity ${entityId} was not found`);
     }
 
     return NextResponse.json(detail);
   } catch (error) {
-    console.error("获取化学实体 RDC 列表失败:", error);
+    console.error("Failed to get the RDC list for the chemical entity:", error);
     return NextResponse.json(
       {
         error: {
           code: "SERVER_ERROR",
-          message: "获取化学实体 RDC 列表失败",
+          message: "Failed to get the RDC list for the chemical entity",
           details: [],
         },
       },
@@ -46,4 +46,3 @@ export async function GET(
     );
   }
 }
-

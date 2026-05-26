@@ -149,6 +149,11 @@ ISSUE_TEXT = {
         "\u8be5\u8868\u7684 UNIQUE KEY \u88ab\u91cd\u590d\u4f7f\u7528\u3002",
         "\u53bb\u91cd\uff0c\u4fdd\u7559\u4e00\u884c\uff1b\u5982\u9700\u4fdd\u7559\u591a\u6761\uff0c\u9700\u8c03\u6574\u552f\u4e00\u952e\u8bbe\u8ba1\u3002",
     ),
+    "UNIQUE_EMPTY_STRING_RISK": (
+        "\u53ef\u7a7a\u552f\u4e00\u952e\u7a7a\u5b57\u7b26\u4e32\u98ce\u9669",
+        "SQL \u4e2d\u8be5 UNIQUE KEY \u5b57\u6bb5\u53ef\u4e3a NULL\uff0c\u4f46 CSV \u7a7a\u5355\u5143\u683c\u5982\u88ab\u5bfc\u5165\u4e3a\u7a7a\u5b57\u7b26\u4e32 `''`\uff0cMySQL \u4f1a\u5c06\u591a\u4e2a `''` \u89c6\u4e3a\u91cd\u590d\u503c\u3002",
+        "\u5bfc\u5165\u65f6\u5c06\u7a7a\u503c\u6620\u5c04\u4e3a NULL\uff0c\u6216\u4ece CSV \u4e2d\u79fb\u9664\u8be5\u53ef\u7a7a\u5b57\u6bb5\u8ba9\u6570\u636e\u5e93\u4f7f\u7528\u9ed8\u8ba4 NULL\u3002",
+    ),
     "FK_MISSING_PARENT": (
         "\u5916\u952e\u7f3a\u5931",
         "\u5173\u8054\u8868\u5f15\u7528\u7684\u7236\u8868 ID \u4e0d\u5b58\u5728\u3002",
@@ -350,6 +355,13 @@ def valid_datetime(value: str) -> bool:
     return False
 
 
+def mysql_unique_value(value: str) -> str:
+    # The schema uses utf8mb4_unicode_ci, so unique indexes on text columns are
+    # case-insensitive in MySQL. This approximates the behavior closely enough
+    # to catch import-blocking duplicates before loading CSV files.
+    return value.strip().casefold()
+
+
 def csv_line_number(row: dict[str, Any], fallback: int) -> int:
     try:
         return int(row.get("__line__", fallback))
@@ -469,15 +481,25 @@ def validate_rows(
         for key_name, key_cols in table_def.uniques:
             if key_name == "PRIMARY":
                 continue
-            values = tuple(row.get(col, "") for col in key_cols)
-            if any(is_empty(v) for v in values):
+            if any(col not in row for col in key_cols):
                 continue
-            seen_line = unique_seen[key_name].get(values)
+            values = tuple(row.get(col, "") for col in key_cols)
+            unique_values = tuple(mysql_unique_value(value) for value in values)
+            if any(is_empty(v) for v in values):
+                nullable_cols = [col for col in key_cols if table_def.columns.get(col) and table_def.columns[col].nullable]
+                seen_line = unique_seen[key_name].get(unique_values)
+                if nullable_cols and seen_line is not None:
+                    details = f"{key_name}: " + ", ".join(f"{c}={v}" for c, v in zip(key_cols, values))
+                    issues.append(Issue("UNIQUE_EMPTY_STRING_RISK", table, file_name, line, ",".join(key_cols), "|".join(values), details + f"; first line={seen_line}"))
+                else:
+                    unique_seen[key_name][unique_values] = line
+                continue
+            seen_line = unique_seen[key_name].get(unique_values)
             if seen_line is not None:
                 details = f"{key_name}: " + ", ".join(f"{c}={v}" for c, v in zip(key_cols, values))
                 issues.append(Issue("UNIQUE_DUPLICATE", table, file_name, line, ",".join(key_cols), "|".join(values), details + f"; first line={seen_line}"))
             else:
-                unique_seen[key_name][values] = line
+                unique_seen[key_name][unique_values] = line
 
     return issues, normalized_rows
 

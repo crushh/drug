@@ -16,16 +16,21 @@ export default function RootLayout({
     <html lang="zh">
       <body>
         <header className="site-header">
-          <div className="site-header__inner">
-            <Link href="/" className="brand">
-              <img src="/logo.svg" alt="RDC" width={28} height={28} />
-              <span className="brand__title">RDC Portal</span>
-            </Link>
+          <img className="site-header__banner" src="/header.png" alt="" />
+          <div className="site-nav-bar">
             <nav className="site-nav">
-              <Link href="/">Home</Link>
+              <li>
+              <Link href="/" className="site-nav__item">
+                <span className="site-nav__icon" aria-hidden="true">⌂</span>
+                <span>Home</span>
+              </Link>
+              </li>
+              <li>
               <div className="dropdown">
                 <button className="dropdown-toggle" aria-haspopup="menu" aria-expanded="false">
-                  Search
+                  <span className="site-nav__icon" aria-hidden="true">⌕</span>
+                  <span>Search</span>
+                  <span className="dropdown-caret" aria-hidden="true">▾</span>
                 </button>
                 <div className="dropdown-menu" role="menu">
                   <Link href="/?tab=rdc" role="menuitem">Search for RDC</Link>
@@ -36,6 +41,7 @@ export default function RootLayout({
                   <Link href="/?tab=radionuclide" role="menuitem">Search for Radionuclide</Link>
                 </div>
               </div>
+              </li>
             </nav>
           </div>
         </header>

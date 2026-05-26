@@ -192,10 +192,10 @@ export default function DrugDetailPage({ params }: { params: { drug_id: string }
 
   return (
     <main style={{ padding: 24 }}>
-      <h1 style={{ margin: 0 }}>RDCInfo 详情页</h1>
+      <h1 style={{ margin: 0 }}>RDCInfo Detail Page</h1>
       <p style={{ marginTop: 6, color: "#475569" }}>Drug ID: {drugId}</p>
 
-      {error && <p style={{ color: "#b91c1c" }}>错误：{error}</p>}
+      {error && <p style={{ color: "#b91c1c" }}>Error: {error}</p>}
       {loading && <p>Loading…</p>}
 
       {!!g && (
@@ -225,7 +225,7 @@ export default function DrugDetailPage({ params }: { params: { drug_id: string }
             <span style={{ fontSize: 16 }}>{openGeneral ? "▾" : "▸"}</span>
           </div>
           {openGeneral && (
-            <table style={{ width: "100%", borderCollapse: "collapse", background: "#fff" ,padding:10}}>
+            <table style={{ width: "100%", tableLayout: "fixed", borderCollapse: "collapse", background: "#fff" ,padding:10}}>
 	              <tbody>
 	                {[
 	                  ["drug_id", g.drug_id],
@@ -288,9 +288,10 @@ export default function DrugDetailPage({ params }: { params: { drug_id: string }
 	                            justifyContent: "space-between",
 	                            alignItems: "center",
 	                            gap: 12,
+                              minWidth: 0,
 	                          }}
 	                        >
-	                          <span>{value as any}</span>
+	                          <span style={{ minWidth: 0, overflowWrap: "anywhere" }}>{value as any}</span>
 	                          <a
 	                            href={`/chemical/${category}/${encodeURIComponent(entityId)}`}
 	                            target="_blank"
@@ -305,6 +306,8 @@ export default function DrugDetailPage({ params }: { params: { drug_id: string }
 	                              boxShadow: "4px 3px 0 0 #565656",
 	                              color: "#fff",
 	                              display: "inline-block",
+                                flexShrink: 0,
+                                whiteSpace: "nowrap",
 	                            }}
 	                          >
 	                            {buttonLabel}
@@ -325,6 +328,7 @@ export default function DrugDetailPage({ params }: { params: { drug_id: string }
 	                          fontWeight: 700,
 	                          color: "#0f172a",
 	                          fontSize: 14,
+                            overflowWrap: "anywhere",
 	                        }}
 	                      >
 	                        {label}
@@ -337,6 +341,7 @@ export default function DrugDetailPage({ params }: { params: { drug_id: string }
 	                          color: "#0f172a",
 	                          fontSize: 14,
 	                          lineHeight: 1.5,
+                            overflowWrap: "anywhere",
 	                        }}
 	                      >
 	                        {content}
@@ -407,7 +412,7 @@ export default function DrugDetailPage({ params }: { params: { drug_id: string }
 	        )}
 	      </section>
 
-      {/* 参考文献 */}
+      {/* References */}
       <section
         style={{
           marginTop: 16,
