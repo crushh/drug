@@ -360,6 +360,7 @@ function mapBiodist(record: AnimalInVivoBiodist) {
     },
     biodist_result_image: record.biodistResultImage ?? null,
     biodist_description: record.biodistDescription ?? null,
+    cell_lines: record.cellLines ?? null,
   };
 }
 

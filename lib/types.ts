@@ -133,6 +133,7 @@ export interface AnimalInVivoBiodist {
   tbrTumorHeart?: number;
   biodistResultImage?: string;
   biodistDescription?: string;
+  cellLines?: string;
 }
 
 export interface AnimalInVivoEfficacy {

@@ -32,6 +32,7 @@ export type BiodistributionEntry = {
   tbr?: Record<string, number | null | undefined>;
   biodist_result_image: string | null;
   biodist_description: string | null;
+  cell_lines: string | null;
 };
 
 export type AnimalStudy = {
@@ -397,12 +398,14 @@ export function AnimalSection({
                             {[
                               ["Biological Distribution_Type", renderValue(shared.biodist_type)],
                               ["Animal model", renderValue(shared.animal_model)],
+                              ["Cell lines", renderValue(shared.cell_lines)],
                               ["Dosage", renderValue(dosage)],
                               ["Metabolism", renderValue(shared.metabolism)],
                               ["Excretion", renderValue(shared.excretion)],
                               ["Tumor retention time", renderValue(shared.tumor_retention_time)],
                               ["Biodist result image", biodistImageNode],
                               ["Biodist description", renderValue(shared.biodist_description)],
+                            
                             ].map(([label, value], i, arr) => (
                               <tr key={i}>
                                 <td style={{ padding: "8px 10px", borderTop: i === 0 ? "1px solid #d4d4d8" : "1px solid #e5e7eb", borderBottom: i === arr.length - 1 ? "1px solid #d4d4d8" : "1px solid #e5e7eb", width: "26%", fontWeight: 700, color: "#0f172a", background: "#f8fafc", fontSize: 14 }}>

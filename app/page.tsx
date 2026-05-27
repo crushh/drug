@@ -36,14 +36,14 @@ function getChemicalLabel(category: ChemicalEntityCategory) {
 }
 
 function TileMenu({ activeKey, onSelect }: { activeKey: SearchTabKey; onSelect: (key: SearchTabKey) => void }) {
-  const items = useMemo<Array<{ key: SearchTabKey; label: string }>>(
+  const items = useMemo<Array<{ key: SearchTabKey; label: string; imageSrc: string }>>(
     () => [
-      { key: "rdc", label: "Search for RDC" },
-      { key: "cold_compound", label: "Search for Cold Compound" },
-      { key: "ligand", label: "Search for Ligand" },
-      { key: "linker", label: "Search for Linker" },
-      { key: "chelator", label: "Search for Chelator" },
-      { key: "radionuclide", label: "Search for Radionuclide" },
+      { key: "rdc", label: "Search for RDC", imageSrc: "/RDC.svg" },
+      { key: "cold_compound", label: "Search for Cold Compound", imageSrc: "/cold_compound.svg" },
+      { key: "ligand", label: "Search for Ligand", imageSrc: "/Ligand.svg" },
+      { key: "linker", label: "Search for Linker", imageSrc: "/linker.svg" },
+      { key: "chelator", label: "Search for Chelator", imageSrc: "/chelator.svg" },
+      { key: "radionuclide", label: "Search for Radionuclide", imageSrc: "/radionuclide.svg" },
     ],
     []
   );
@@ -81,10 +81,11 @@ function TileMenu({ activeKey, onSelect }: { activeKey: SearchTabKey; onSelect: 
               style={{
                 width: 84,
                 height: 84,
-                background: color,
                 display: "block",
-                WebkitMask: "url('/linker.svg') center / contain no-repeat",
-                mask: "url('/linker.svg') center / contain no-repeat",
+                backgroundImage: `url('${it.imageSrc}')`,
+                backgroundPosition: "center",
+                backgroundRepeat: "no-repeat",
+                backgroundSize: "contain",
               }}
             />
             <span style={{ fontSize: 16, lineHeight: 1.2, color }}>{it.label}</span>

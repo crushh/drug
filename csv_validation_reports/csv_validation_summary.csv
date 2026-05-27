@@ -1,7 +1,0 @@
-﻿priority,错误类型,错误数,问题说明,修复建议,涉及表,样例
-1,可空唯一键空字符串风险 (UNIQUE_EMPTY_STRING_RISK),2052,SQL 中该 UNIQUE KEY 字段可为 NULL，但 CSV 空单元格如被导入为空字符串 `''`，MySQL 会将多个 `''` 视为重复值。,导入时将空值映射为 NULL，或从 CSV 中移除该可空字段让数据库使用默认 NULL。,rdc_drug(2052),"- `rdc_drug.csv` 行 3: `external_id` = `` uk_external_id: external_id=; first line=2
-- `rdc_drug.csv` 行 4: `external_id` = `` uk_external_id: external_id=; first line=2
-- `rdc_drug.csv` 行 5: `external_id` = `` uk_external_id: external_id=; first line=2
-- `rdc_drug.csv` 行 6: `external_id` = `` uk_external_id: external_id=; first line=2
-- `rdc_drug.csv` 行 7: `external_id` = `` uk_external_id: external_id=; first line=2"
-2,唯一键重复 (UNIQUE_DUPLICATE),1,该表的 UNIQUE KEY 被重复使用。,去重，保留一行；如需保留多条，需调整唯一键设计。,indication(1),"- `indication.csv` 行 70: `name,icd11_code` = `Myocardial Infarction|BA41.Z` uk_name_code: name=Myocardial Infarction, icd11_code=BA41.Z; first line=8"

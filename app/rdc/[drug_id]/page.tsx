@@ -21,6 +21,7 @@ type General = {
   status: string | null;
   type: string | null;
   smiles: string | null;
+  moa: string | null;
   structure_image: string | null;
   chebi_id: string | null;
   pubchem_cid: string | null;
@@ -234,6 +235,7 @@ export default function DrugDetailPage({ params }: { params: { drug_id: string }
 	                  ["drug_synonyms", g.drug_synonyms ?? "-"],
 	                  ["status", g.status ?? "-"],
 	                  ["smiles", g.smiles ?? "-"],
+	                  ["moa", g.moa ?? "-"],
 	                  ["structure_image", g.structure_image ?? "-"],
 	                  ["cold compound Name", c?.compound_name ?? "-"],
 	                  ["ligand Name", c?.ligand_name ?? "-"],
