@@ -4,4 +4,9 @@
 - `rdc_drug.csv` 第 5 行，`external_id` = 空
 - `rdc_drug.csv` 第 6 行，`external_id` = 空
 - `rdc_drug.csv` 第 7 行，`external_id` = 空"
-2,重复记录,1,indication.csv(1),这一行和文件里的另一行内容重复，与第 8 行重复。,请人工确认两行是否表示同一条数据。若是同一条，保留信息更完整、写法更规范的一条，删除或合并另一条。,"- `indication.csv` 第 70 行，`name,icd11_code` = `Myocardial Infarction|BA41.Z`，疑似与第 8 行重复"
+2,引用编号不存在,10,chemical_affinity.csv(10),chemical_entity_id 列填写的编号在对应主数据文件中找不到。,先确认编号是否写错；如果编号正确，请补充对应主数据记录。,"- `chemical_affinity.csv` 第 168 行，`chemical_entity_id` = `LIG00169`
+- `chemical_affinity.csv` 第 169 行，`chemical_entity_id` = `LIG00169`
+- `chemical_affinity.csv` 第 170 行，`chemical_entity_id` = `LIG00169`
+- `chemical_affinity.csv` 第 171 行，`chemical_entity_id` = `LIG00169`
+- `chemical_affinity.csv` 第 172 行，`chemical_entity_id` = `LIG00169`"
+3,重复记录,1,indication.csv(1),这一行和文件里的另一行内容重复，与第 8 行重复。,请人工确认两行是否表示同一条数据。若是同一条，保留信息更完整、写法更规范的一条，删除或合并另一条。,"- `indication.csv` 第 70 行，`name,icd11_code` = `Myocardial Infarction|BA41.Z`，疑似与第 8 行重复"
