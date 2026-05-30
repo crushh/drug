@@ -16,7 +16,7 @@ export default function RootLayout({
     <html lang="zh">
       <body>
         <header className="site-header">
-          <img className="site-header__banner" src="/header.png" alt="" />
+          <img className="site-header__banner" src="/header.svg" alt="" />
           <div className="site-nav-bar">
             <nav className="site-nav">
               <li>

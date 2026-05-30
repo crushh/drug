@@ -543,28 +543,26 @@ function HomePageContent() {
           </h2>
           <div style={{ display: "grid", gap: 8, fontSize: 14, lineHeight: 1.35 }}>
             <p style={{ margin: 0 }}>
-              <strong>Prof. Feng ZHU</strong> (zhufeng@zju.edu.cn)
+              <strong>Wenhai Huang</strong> (hwh@hmc.edu.cn)
               <br />
-              Lab of Innovative Drug Research and Bioinformatics{" "}
+              School of Pharmacy, Hangzhou Medical-College{" "}
               <a
-                href="https://idrblab.org/"
+                href="https://www.hmc.edu.cn/"
                 target="_blank"
                 rel="noreferrer"
-                aria-label="Open Lab of Innovative Drug Research and Bioinformatics"
+                aria-label="Open School of Pharmacy, Hangzhou Medical-College"
                 style={{ color: "#008b8b", textDecoration: "none", fontWeight: 700 }}
               >
                 ↗
               </a>
             </p>
             <p style={{ margin: 0 }}>
-              <strong>Prof. Xiaowu DONG</strong> (dongxw@zju.edu.cn)
-              <br />
-              Lab of New Intervention Strategy for Innovation Drug R&amp;D{" "}
+              <strong>Mingfei Wu</strong> (wumf@hmc.edu.cn){" "}
               <a
-                href="https://www.zju.edu.cn/"
+                href="https://www.hmc.edu.cn/"
                 target="_blank"
                 rel="noreferrer"
-                aria-label="Open Lab of New Intervention Strategy for Innovation Drug R and D"
+                aria-label="Open Hangzhou Medical-College"
                 style={{ color: "#008b8b", textDecoration: "none", fontWeight: 700 }}
               >
                 ↗
@@ -575,7 +573,7 @@ function HomePageContent() {
               <br />
               Pharmacy Department of Zhejiang Cancer Hospital{" "}
               <a
-                href="https://www.zjcc.org.cn/"
+                href="https://www.zchospital.com/"
                 target="_blank"
                 rel="noreferrer"
                 aria-label="Open Pharmacy Department of Zhejiang Cancer Hospital"

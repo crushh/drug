@@ -3,9 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev -p 3401",
+    "dev": "next dev -p 3101",
     "build": "next build",
     "start": "next start",
+    "upsert:csv": "node scripts/upsert_table_from_csv.js",
     "lint": "next lint"
   },
   "dependencies": {

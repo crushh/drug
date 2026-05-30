@@ -1,0 +1,7 @@
+﻿优先级,问题类型,数量,需要查看的文件,问题说明,推荐修改,样例
+1,外部编号为空,2052,rdc_drug.csv(2052),药物的 external_id 列为空。这个字段不是必须都填写，只有确实有来源编号时才需要补充。,如果没有真实外部编号，可以保持为空；不要为了消除报告而随便编编号。如果这列暂时不用，建议后续统一补真实编号。,"- `rdc_drug.csv` 第 3 行，`external_id` = 空
+- `rdc_drug.csv` 第 4 行，`external_id` = 空
+- `rdc_drug.csv` 第 5 行，`external_id` = 空
+- `rdc_drug.csv` 第 6 行，`external_id` = 空
+- `rdc_drug.csv` 第 7 行，`external_id` = 空"
+2,重复记录,1,indication.csv(1),这一行和文件里的另一行内容重复，与第 8 行重复。,请人工确认两行是否表示同一条数据。若是同一条，保留信息更完整、写法更规范的一条，删除或合并另一条。,"- `indication.csv` 第 70 行，`name,icd11_code` = `Myocardial Infarction|BA41.Z`，疑似与第 8 行重复"

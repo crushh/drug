@@ -358,6 +358,8 @@ export async function getDrugDetail(drugId: string, options: DrugDetailOptions =
     },
   };
 
+  detail.targets = await fetchTargets(drugId);
+  detail.indications = await fetchIndications(drugId);
   detail.chemicals = await buildChemicalBlock(drugId, allEntities);
 
   if (expand.has("human_activity")) {
@@ -373,6 +375,44 @@ export async function getDrugDetail(drugId: string, options: DrugDetailOptions =
   }
 
   return detail;
+}
+
+async function fetchTargets(drugId: string) {
+  const pool = getPool();
+  const [rows] = await pool.query<RowDataPacket[]>(
+    `SELECT t.target_id, t.name, t.external_id, t.description
+     FROM drug_target dt
+     JOIN \`target\` t ON t.target_id = dt.target_id
+     WHERE dt.drug_id = ?
+     ORDER BY t.name ASC, t.external_id ASC`,
+    [drugId]
+  );
+
+  return rows.map((row) => ({
+    target_id: (row.target_id as string) ?? null,
+    name: (row.name as string) ?? null,
+    external_id: (row.external_id as string) ?? null,
+    description: (row.description as string) ?? null,
+  }));
+}
+
+async function fetchIndications(drugId: string) {
+  const pool = getPool();
+  const [rows] = await pool.query<RowDataPacket[]>(
+    `SELECT i.indication_id, i.name, i.icd11_code, i.description
+     FROM drug_indication di
+     JOIN indication i ON i.indication_id = di.indication_id
+     WHERE di.drug_id = ?
+     ORDER BY i.name ASC, i.icd11_code ASC`,
+    [drugId]
+  );
+
+  return rows.map((row) => ({
+    indication_id: (row.indication_id as string) ?? null,
+    name: (row.name as string) ?? null,
+    icd11_code: (row.icd11_code as string) ?? null,
+    description: (row.description as string) ?? null,
+  }));
 }
 
 async function buildChemicalBlock(drugId: string, allEntities: boolean) {
@@ -692,6 +732,7 @@ export async function getChemicalDetail(
     `SELECT
        entity_category,
        entity_id,
+       external_id,
        name,
        synonyms,
        smiles,
@@ -730,6 +771,7 @@ export async function getChemicalDetail(
   const basic = {
     entity_category: row.entity_category as string,
     entity_id: row.entity_id as string,
+    external_id: (row.external_id as string) ?? null,
     name: (row.name as string) ?? null,
     synonyms: (row.synonyms as string) ?? null,
     smiles: (row.smiles as string) ?? null,
@@ -817,6 +859,7 @@ export async function getChemicalRdcList(
     `SELECT
        entity_category,
        entity_id,
+       external_id,
        name,
        synonyms,
        smiles,
@@ -855,6 +898,7 @@ export async function getChemicalRdcList(
   const basic = {
     entity_category: row.entity_category as string,
     entity_id: row.entity_id as string,
+    external_id: (row.external_id as string) ?? null,
     name: (row.name as string) ?? null,
     synonyms: (row.synonyms as string) ?? null,
     smiles: (row.smiles as string) ?? null,

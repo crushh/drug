@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import io
 import json
 import re
 import sys
@@ -198,6 +199,46 @@ class Issue:
     details: str
 
 
+class CsvDecodeError(Exception):
+    def __init__(self, table: str, csv_path: Path, encoding: str, error: UnicodeDecodeError, preview: str) -> None:
+        data = error.object
+        line_no = data.count(b"\n", 0, error.start) + 1
+        line_start = data.rfind(b"\n", 0, error.start) + 1
+        column_no = error.start - line_start + 1
+        byte_value = data[error.start] if error.start < len(data) else None
+        byte_text = f"0x{byte_value:02x}" if byte_value is not None else "EOF"
+        message = (
+            "CSV decode failed\n"
+            f"  table: {table}\n"
+            f"  file: {csv_path}\n"
+            f"  encoding: {encoding}\n"
+            f"  line: {line_no}\n"
+            f"  byte column: {column_no}\n"
+            f"  byte offset: {error.start}\n"
+            f"  byte: {byte_text}\n"
+            f"  content: {preview}"
+        )
+        super().__init__(message)
+
+
+def preview_decode_error_line(data: bytes, error_pos: int, limit: int = 240) -> str:
+    line_start = data.rfind(b"\n", 0, error_pos) + 1
+    line_end = data.find(b"\n", error_pos)
+    if line_end == -1:
+        line_end = len(data)
+    line = data[line_start:line_end].rstrip(b"\r")
+    text = line.decode("utf-8-sig", errors="backslashreplace")
+    if len(text) <= limit:
+        return text
+    error_col = error_pos - line_start
+    half = max(20, limit // 2)
+    start = max(0, error_col - half)
+    end = min(len(text), error_col + half)
+    prefix = "..." if start > 0 else ""
+    suffix = "..." if end < len(text) else ""
+    return f"{prefix}{text[start:end]}{suffix}"
+
+
 def split_sql_items(body: str) -> list[str]:
     items: list[str] = []
     current: list[str] = []
@@ -369,8 +410,15 @@ def csv_line_number(row: dict[str, Any], fallback: int) -> int:
         return fallback
 
 
-def read_csv_rows(csv_path: Path) -> tuple[list[str], list[dict[str, str]]]:
-    with csv_path.open("r", encoding="utf-8-sig", newline="") as f:
+def read_csv_rows(table: str, csv_path: Path) -> tuple[list[str], list[dict[str, str]]]:
+    encoding = "utf-8-sig"
+    try:
+        text = csv_path.read_bytes().decode(encoding)
+    except UnicodeDecodeError as exc:
+        preview = preview_decode_error_line(exc.object, exc.start)
+        raise CsvDecodeError(table, csv_path, encoding, exc, preview) from exc
+
+    with io.StringIO(text, newline="") as f:
         reader = csv.reader(f)
         try:
             headers = next(reader)
@@ -429,6 +477,76 @@ def issue_sample(issue: Issue) -> str:
     if len(details) > 120:
         details = details[:117] + "..."
     return f"- `{issue.file}` {ZH['line']} {issue.line}: `{issue.column}` = `{value}` {details}"
+
+
+def first_line_from_details(details: str) -> str:
+    match = re.search(r"first line=(\d+)", details)
+    return match.group(1) if match else ""
+
+
+def friendly_issue_text(issue: Issue) -> tuple[str, str, str]:
+    first_line = first_line_from_details(issue.details)
+
+    if issue.code == "UNIQUE_EMPTY_STRING_RISK":
+        if issue.table == "rdc_drug" and issue.column == "external_id":
+            return (
+                "外部编号为空",
+                "药物的 external_id 列为空。这个字段不是必须都填写，只有确实有来源编号时才需要补充。",
+                "如果没有真实外部编号，可以保持为空；不要为了消除报告而随便编编号。如果这列暂时不用，建议后续统一补真实编号。",
+            )
+        return (
+            "关键字段为空",
+            f"{issue.column} 列为空。该字段可能用于区分记录，建议确认是否确实缺失。",
+            "有真实值就补充；没有真实值就保持为空，不要随意编造。",
+        )
+
+    if issue.code == "UNIQUE_DUPLICATE":
+        duplicate_hint = f"，与第 {first_line} 行重复" if first_line else ""
+        return (
+            "重复记录",
+            f"这一行和文件里的另一行内容重复{duplicate_hint}。",
+            "请人工确认两行是否表示同一条数据。若是同一条，保留信息更完整、写法更规范的一条，删除或合并另一条。",
+        )
+
+    if issue.code == "MISSING_FILE":
+        return ("缺少文件", "应该提供这个 CSV 文件，但当前目录中没有找到。", "补充对应 CSV 文件，或确认这类数据本次不需要提供。")
+    if issue.code == "HEADER_BLANK":
+        return ("空列名", "CSV 中有一列没有列名。", "删除多余空列，或填写正确列名。")
+    if issue.code == "HEADER_UNKNOWN":
+        return ("多余列", f"CSV 中的 {issue.column} 列不是当前模板需要的列。", "确认该列是否需要保留；不需要则删除。")
+    if issue.code == "HEADER_DUPLICATE":
+        return ("重复列名", f"CSV 中的 {issue.column} 列重复。", "只保留一列，删除或改名重复列。")
+    if issue.code == "REQUIRED_EMPTY":
+        return ("必填内容为空", f"{issue.column} 列不能为空。", "补齐该字段；如果整行无效，请删除该行。")
+    if issue.code == "ENUM_INVALID":
+        return ("选项值不规范", f"{issue.column} 列的值不在允许范围内。", "按模板允许的选项统一修改，注意大小写和拼写。")
+    if issue.code == "DECIMAL_INVALID":
+        return ("数字格式不规范", f"{issue.column} 列应填写单个数字。", "只保留一个明确数字；范围、均值加误差、文字说明请拆到备注或其他字段。")
+    if issue.code == "INTEGER_INVALID":
+        return ("整数格式不规范", f"{issue.column} 列应填写整数。", "改成纯整数，不要带单位、范围或文字。")
+    if issue.code == "DATE_INVALID":
+        return ("日期格式不规范", f"{issue.column} 列日期格式不统一。", "统一改成 YYYY-MM-DD，例如 2025-06-20。")
+    if issue.code == "DATETIME_INVALID":
+        return ("日期时间格式不规范", f"{issue.column} 列日期时间格式不统一。", "统一改成 YYYY-MM-DD HH:MM:SS；不确定时先留空。")
+    if issue.code == "VALUE_TOO_LONG":
+        return ("内容过长", f"{issue.column} 列内容过长。", "请缩短内容，只保留必要信息。")
+    if issue.code == "FK_MISSING_PARENT":
+        return ("引用编号不存在", f"{issue.column} 列填写的编号在对应主数据文件中找不到。", "先确认编号是否写错；如果编号正确，请补充对应主数据记录。")
+    if issue.code == "MULTIPLE_IDS":
+        return ("一个单元格填了多个编号", f"{issue.column} 列同一个单元格中包含多个编号。", "拆成多行，每行只保留一个编号。")
+
+    title, problem, fix = ISSUE_TEXT.get(issue.code, (issue.code, issue.details, "请人工确认并修正。"))
+    return title, problem, fix
+
+
+def friendly_issue_sample(issue: Issue) -> str:
+    value = issue.value.replace("\n", " ").replace("\r", " ")
+    if len(value) > 90:
+        value = value[:87] + "..."
+    first_line = first_line_from_details(issue.details)
+    duplicate_hint = f"，疑似与第 {first_line} 行重复" if issue.code == "UNIQUE_DUPLICATE" and first_line else ""
+    value_text = "空" if value == "" else f"`{value}`"
+    return f"- `{issue.file}` 第 {issue.line} 行，`{issue.column}` = {value_text}{duplicate_hint}"
 
 
 def validate_rows(
@@ -558,51 +676,41 @@ def make_report(
     output_dir.mkdir(parents=True, exist_ok=True)
     grouped: dict[tuple[str, str, str], list[Issue]] = defaultdict(list)
     for issue in all_issues:
-        title, problem, fix = ISSUE_TEXT.get(issue.code, (issue.code, issue.details, ""))
+        title, problem, fix = friendly_issue_text(issue)
         grouped[(issue.code, title, problem + "\n" + fix)].append(issue)
 
     sorted_groups = sorted(grouped.items(), key=lambda item: len(item[1]), reverse=True)
 
     md: list[str] = []
-    md.append(ZH["report_title"])
+    md.append("# CSV 数据修改建议报告")
     md.append("")
-    md.append(ZH["generated_by"])
+    md.append("本报告面向数据整理人员，只说明需要检查哪些 CSV、哪些行，以及推荐如何修改。")
     md.append("")
-    md.append(f"## {ZH['summary']}")
+    md.append("## 概要")
     md.append("")
-    md.append(f"- {ZH['files']}: {files_count}")
-    md.append(f"- {ZH['rows']}: {data_rows_count}")
-    md.append(f"- {ZH['issues']}: {len(all_issues)}")
+    md.append(f"- 检查文件数: {files_count}")
+    md.append(f"- 检查数据行数: {data_rows_count}")
+    md.append(f"- 需要关注的问题数: {len(all_issues)}")
     md.append("")
-    md.append(f"## {ZH['quick_fix']}")
+    md.append("## 优先处理建议")
     md.append("")
-    md.append(ZH["quick_fix_text"])
+    md.append("先处理重复记录，再处理格式错误、必填为空、编号不存在等问题。对于“外部编号为空”这类问题，如果没有真实编号，可以保持为空，不要随意编造。")
     md.append("")
-    md.append(f"## {ZH['insertable']}")
-    md.append("")
-    md.append(f"| {ZH['table']} | {ZH['count']} |")
-    md.append("|---|---:|")
-    for table in table_order:
-        if table in inserted_counts:
-            md.append(f"| {table} | {inserted_counts[table]} |")
-    md.append("")
-    md.append("## \u95ee\u9898\u5206\u7ec4")
+    md.append("## 问题分组")
     md.append("")
     for index, ((code, title, combined), issues) in enumerate(sorted_groups, start=1):
         problem, fix = combined.split("\n", 1)
-        table_counts = Counter(issue.table for issue in issues)
+        file_counts = Counter(issue.file for issue in issues)
         md.append(f"### {index}. {title} ({len(issues)} \u6761)")
         md.append("")
-        md.append(f"**{ZH['type']}**: `{code}`")
+        md.append(f"**需要查看的文件**: " + ", ".join(f"`{file}` ({count} 条)" for file, count in file_counts.most_common()))
         md.append("")
-        md.append(f"**{ZH['problem']}**: {problem}")
+        md.append(f"**问题说明**: {problem}")
         md.append("")
-        md.append(f"**{ZH['fix']}**: {fix}")
+        md.append(f"**推荐修改**: {fix}")
         md.append("")
-        md.append("**\u6d89\u53ca\u8868**: " + ", ".join(f"{table}: {count}" for table, count in table_counts.most_common()))
-        md.append("")
-        md.append(f"**{ZH['samples']}**:")
-        md.extend(issue_sample(issue) for issue in issues[:8])
+        md.append("**样例**:")
+        md.extend(friendly_issue_sample(issue) for issue in issues[:8])
         md.append("")
 
     (output_dir / "csv_validation_report.md").write_text("\n".join(md), encoding="utf-8")
@@ -610,29 +718,29 @@ def make_report(
     summary_path = output_dir / "csv_validation_summary.csv"
     with summary_path.open("w", encoding="utf-8-sig", newline="") as f:
         writer = csv.writer(f)
-        writer.writerow(["priority", "\u9519\u8bef\u7c7b\u578b", "\u9519\u8bef\u6570", "\u95ee\u9898\u8bf4\u660e", "\u4fee\u590d\u5efa\u8bae", "\u6d89\u53ca\u8868", "\u6837\u4f8b"])
+        writer.writerow(["优先级", "问题类型", "数量", "需要查看的文件", "问题说明", "推荐修改", "样例"])
         for index, ((code, title, combined), issues) in enumerate(sorted_groups, start=1):
             problem, fix = combined.split("\n", 1)
-            table_counts = Counter(issue.table for issue in issues)
+            file_counts = Counter(issue.file for issue in issues)
             writer.writerow(
                 [
                     index,
-                    f"{title} ({code})",
+                    title,
                     len(issues),
+                    "; ".join(f"{file}({count})" for file, count in file_counts.most_common()),
                     problem,
                     fix,
-                    "; ".join(f"{table}({count})" for table, count in table_counts.most_common()),
-                    "\n".join(issue_sample(issue) for issue in issues[:5]),
+                    "\n".join(friendly_issue_sample(issue) for issue in issues[:5]),
                 ]
             )
 
     details_path = output_dir / "csv_validation_details.csv"
     with details_path.open("w", encoding="utf-8-sig", newline="") as f:
         writer = csv.writer(f)
-        writer.writerow(["table", "file", "line", "column", "value", "issue_code", "\u9519\u8bef\u7c7b\u578b", "\u95ee\u9898\u8bf4\u660e", "\u4fee\u590d\u5efa\u8bae", "details"])
+        writer.writerow(["文件", "行号", "列名", "当前值", "问题类型", "问题说明", "推荐修改"])
         for issue in all_issues:
-            title, problem, fix = ISSUE_TEXT.get(issue.code, (issue.code, issue.details, ""))
-            writer.writerow([issue.table, issue.file, issue.line, issue.column, issue.value, issue.code, title, problem, fix, issue.details])
+            title, problem, fix = friendly_issue_text(issue)
+            writer.writerow([issue.file, issue.line, issue.column, issue.value, title, problem, fix])
 
     json_path = output_dir / "csv_validation_report.json"
     json_path.write_text(
@@ -676,7 +784,11 @@ def run(schema_path: Path, csv_dir: Path, output_dir: Path) -> int:
             inserted_counts[table_name] = 0
             continue
         files_count += 1
-        headers, raw_rows = read_csv_rows(csv_path)
+        try:
+            headers, raw_rows = read_csv_rows(table_name, csv_path)
+        except CsvDecodeError as exc:
+            print(str(exc), file=sys.stderr)
+            return 2
         data_rows_count += len(raw_rows)
         header_issues: list[Issue] = []
         header_map = build_header_map(table_name, table_def, headers, header_issues, csv_path.name)

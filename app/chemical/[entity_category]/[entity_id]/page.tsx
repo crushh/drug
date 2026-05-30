@@ -18,6 +18,7 @@ import { buildAssetUrl } from "@/lib/assets";
 type Basic = {
   entity_category: string;
   entity_id: string;
+  external_id: string | null;
   name: string | null;
   synonyms: string | null;
   smiles: string | null;
@@ -245,10 +246,25 @@ export default function ChemicalDetailPage({
   const basic = detail?.basic;
   const rdcActivity = detail?.rdc_activity ?? [];
   const rdcList = detail?.rdcs ?? [];
+  const externalIdValue = typeof basic?.external_id === "string" ? basic.external_id.trim() : "";
+  const externalIdDisplay =
+    entity_category === "ligand" && externalIdValue ? (
+      <a
+        href={`https://www.imgt.org/mAb-DB/mAbcard?AbId=${encodeURIComponent(externalIdValue)}`}
+        target="_blank"
+        rel="noreferrer"
+        style={{ color: "#0ea5e9", fontWeight: 700, textDecoration: "none", overflowWrap: "anywhere" }}
+      >
+        {externalIdValue} ↗
+      </a>
+    ) : (
+      basic?.external_id ?? "-"
+    );
 
   const basicCommonRows: Array<[string, ReactNode]> = [
     ["entity_category", basic?.entity_category ?? "-"],
     ["entity_id", basic?.entity_id ?? "-"],
+    ["external_id", externalIdDisplay],
     ["name", basic?.name ?? "-"],
     ["synonyms", basic?.synonyms ?? "-"],
   ];

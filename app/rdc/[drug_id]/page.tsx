@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import type { CSSProperties } from "react";
 import {
   AnimalSection,
   HumanActivitySection,
@@ -37,9 +38,25 @@ type Chemicals = {
   entities?: Record<string, Array<{ entity_id: string; name: string }>>;
 };
 
+type TargetItem = {
+  target_id: string | null;
+  name: string | null;
+  external_id: string | null;
+  description: string | null;
+};
+
+type IndicationItem = {
+  indication_id: string | null;
+  name: string | null;
+  icd11_code: string | null;
+  description: string | null;
+};
+
 type Detail = {
   general?: General;
   chemicals?: Chemicals;
+  targets?: TargetItem[];
+  indications?: IndicationItem[];
   human_activity?: HumanActivity[];
   animal_in_vivo?: AnimalInVivo;
   in_vitro?: InVitro;
@@ -98,6 +115,7 @@ export default function DrugDetailPage({ params }: { params: { drug_id: string }
   const [openInVitro, setOpenInVitro] = useState(true);
   const [openReferences, setOpenReferences] = useState(true);
   const [openGeneral, setOpenGeneral] = useState(true);
+  const [openBiologicalContext, setOpenBiologicalContext] = useState(true);
   const [openActivitySection, setOpenActivitySection] = useState(true);
   const [references, setReferences] = useState<ReferenceItem[]>([]);
   const [referencesLoading, setReferencesLoading] = useState(false);
@@ -136,6 +154,8 @@ export default function DrugDetailPage({ params }: { params: { drug_id: string }
 
   const g = detail?.general;
   const c = detail?.chemicals;
+  const targets = detail?.targets ?? [];
+  const indications = detail?.indications ?? [];
   const animal = detail?.animal_in_vivo;
   const inVitro = detail?.in_vitro;
   const biodistGroups = useMemo(
@@ -190,6 +210,111 @@ export default function DrugDetailPage({ params }: { params: { drug_id: string }
       cancelled = true;
     };
   }, [drugId]);
+
+  const fieldOrDash = (value: string | null | undefined) => {
+    const trimmed = typeof value === "string" ? value.trim() : "";
+    return trimmed.length > 0 ? trimmed : "-";
+  };
+
+  const metadataPillStyle: CSSProperties = {
+    display: "inline-flex",
+    alignItems: "center",
+    minHeight: 24,
+    padding: "3px 8px",
+    borderRadius: 999,
+    background: "#e0f2fe",
+    color: "#075985",
+    fontSize: 12,
+    fontWeight: 700,
+    lineHeight: 1.3,
+    overflowWrap: "anywhere" as const,
+  };
+
+  const renderBiologicalCard = (
+    item: TargetItem | IndicationItem,
+    idx: number,
+    kind: "target" | "indication"
+  ) => {
+    const isIndication = kind === "indication";
+    const primaryMeta = isIndication ? (item as IndicationItem).icd11_code : (item as TargetItem).external_id;
+    const itemId = isIndication ? (item as IndicationItem).indication_id : (item as TargetItem).target_id;
+    const linkableExternalId = !isIndication && typeof primaryMeta === "string" && primaryMeta.trim().length > 0;
+
+    return (
+      <div
+        key={`${kind}-${idx}`}
+        style={{
+          border: "1px solid #dbeafe",
+          borderRadius: 8,
+          background: idx % 2 === 0 ? "#f8fbff" : "#fff",
+          padding: 12,
+          display: "grid",
+          gap: 8,
+          minWidth: 0,
+        }}
+      >
+        <div style={{ display: "grid", gap: 6, minWidth: 0 }}>
+          <div style={{ color: "#0f172a", fontSize: 15, fontWeight: 800, lineHeight: 1.35, overflowWrap: "anywhere" }}>
+            {fieldOrDash(item.name)}
+          </div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+            <span style={metadataPillStyle}>
+              {isIndication ? "Indication ID" : "Target ID"}: {fieldOrDash(itemId)}
+            </span>
+            <span style={metadataPillStyle}>
+              {isIndication ? "ICD-11" : "External ID"}:{" "}
+              {linkableExternalId ? (
+                <a
+                  href={`https://ttd.idrblab.cn/data/target/details/${encodeURIComponent(primaryMeta.trim())}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  style={{ color: "inherit", textDecoration: "underline", textUnderlineOffset: 2 }}
+                >
+                  {fieldOrDash(primaryMeta)}
+                </a>
+              ) : (
+                fieldOrDash(primaryMeta)
+              )}
+            </span>
+          </div>
+        </div>
+        <div style={{ color: "#334155", fontSize: 13, lineHeight: 1.55, overflowWrap: "anywhere" }}>
+          {fieldOrDash(item.description)}
+        </div>
+      </div>
+    );
+  };
+
+  const renderBiologicalColumn = (
+    title: string,
+    count: number,
+    items: Array<TargetItem | IndicationItem>,
+    kind: "target" | "indication"
+  ) => (
+    <div style={{ border: "1px solid #e2e8f0", borderRadius: 8, overflow: "hidden", minWidth: 0 }}>
+      <div
+        style={{
+          padding: "9px 12px",
+          background: "#f1f5f9",
+          borderBottom: "1px solid #e2e8f0",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          gap: 12,
+        }}
+      >
+        <span style={{ color: "#0f172a", fontWeight: 800 }}>{title}</span>
+        <span style={{ color: PRIMARY_COLOR, fontSize: 12, fontWeight: 800 }}>{count}</span>
+      </div>
+      <div style={{ padding: 12, display: "grid", gap: 10, background: "#fff" }}>
+        {items.length > 0 ? (
+          items.map((item, idx) => renderBiologicalCard(item, idx, kind))
+        ) : (
+          <div style={{ color: "#64748b", fontSize: 13 }}>No data.</div>
+        )}
+      </div>
+    </div>
+  );
 
   return (
     <main style={{ padding: 24 }}>
@@ -255,6 +380,9 @@ export default function DrugDetailPage({ params }: { params: { drug_id: string }
 	                  const isLinker = label === "linker Name";
 	                  const isChelator = label === "chelator Name";
 	                  const isRadionuclide = label === "radionuclide Name";
+                    const isChebiId = label === "chebi_id";
+                    const isPubchemCid = label === "pubchem_cid";
+                    const isPubchemSid = label === "pubchem_sid";
 
 	                  let content: any = value as any;
 
@@ -319,6 +447,31 @@ export default function DrugDetailPage({ params }: { params: { drug_id: string }
 	                    }
 	                  }
 
+                    if (isChebiId || isPubchemCid || isPubchemSid) {
+                      const idValue = typeof value === "string" ? value.trim() : "";
+                      if (idValue && idValue !== "-") {
+                        let href = "";
+                        if (isChebiId) {
+                          href = `https://www.ebi.ac.uk/chembl/explore/compound/${encodeURIComponent(idValue)}`;
+                        } else if (isPubchemCid) {
+                          href = `https://pubchem.ncbi.nlm.nih.gov/compound/${encodeURIComponent(idValue)}`;
+                        } else {
+                          href = `https://pubchem.ncbi.nlm.nih.gov/substance/${encodeURIComponent(idValue)}`;
+                        }
+
+                        content = (
+                          <a
+                            href={href}
+                            target="_blank"
+                            rel="noreferrer"
+                            style={{ color: "#0ea5e9", fontWeight: 700, textDecoration: "none", overflowWrap: "anywhere" }}
+                          >
+                            {idValue} ↗
+                          </a>
+                        );
+                      }
+                    }
+
 	                  return (
 	                    <tr key={label}>
 	                      <td
@@ -353,6 +506,49 @@ export default function DrugDetailPage({ params }: { params: { drug_id: string }
 	                })}
 	              </tbody>
 	            </table>
+          )}
+        </section>
+      )}
+
+      {!!g && (
+        <section
+          style={{
+            marginTop: 16,
+            background: "#F8FAFC",
+            border: `1px solid ${PRIMARY_COLOR}`,
+            borderRadius: 10,
+            overflow: "hidden",
+          }}
+        >
+          <div
+            onClick={() => setOpenBiologicalContext((v) => !v)}
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              padding: "10px 12px",
+              background: PRIMARY_COLOR,
+              color: "#fff",
+              fontWeight: 700,
+              cursor: "pointer",
+            }}
+          >
+            <span>Biological Context</span>
+            <span style={{ fontSize: 16 }}>{openBiologicalContext ? "▾" : "▸"}</span>
+          </div>
+          {openBiologicalContext && (
+            <div
+              style={{
+                padding: 12,
+                background: "#fff",
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+                gap: 12,
+              }}
+            >
+              {renderBiologicalColumn("Targets", targets.length, targets, "target")}
+              {renderBiologicalColumn("Indications", indications.length, indications, "indication")}
+            </div>
           )}
         </section>
       )}
