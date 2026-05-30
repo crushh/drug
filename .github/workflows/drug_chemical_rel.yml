@@ -1,0 +1,77 @@
+name: Data Patch
+
+on:
+  workflow_dispatch:
+    inputs:
+      table:
+        description: "Table name, for example: rdc_drug"
+        required: true
+        default: "rdc_drug"
+      csv:
+        description: "CSV path in repository"
+        required: true
+        default: "csv_templates_normalized/rdc_drug.csv"
+      key:
+        description: "Optional key columns, comma-separated. Required for composite-key tables."
+        required: false
+        default: ""
+      mode:
+        description: "Run mode"
+        required: true
+        type: choice
+        options:
+          - dry-run
+          - apply
+        default: dry-run
+      confirm_apply:
+        description: "Type APPLY_TO_PRODUCTION when mode is apply"
+        required: false
+        default: ""
+
+jobs:
+  data-patch:
+    runs-on: ubuntu-latest
+    environment: production
+    env:
+      DB_HOST: ${{ secrets.DB_HOST }}
+      DB_PORT: ${{ secrets.DB_PORT }}
+      DB_USER: ${{ secrets.DB_USER }}
+      DB_PASS: ${{ secrets.DB_PASS }}
+      DB_NAME: ${{ secrets.DB_NAME }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check script syntax
+        run: node --check scripts/upsert_table_from_csv.js
+
+      - name: Run data patch
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [ "${{ github.event.inputs.mode }}" = "apply" ] && [ "${{ github.event.inputs.confirm_apply }}" != "APPLY_TO_PRODUCTION" ]; then
+            echo "mode=apply requires confirm_apply=APPLY_TO_PRODUCTION"
+            exit 1
+          fi
+
+          cmd=(npm run upsert:csv -- --table "${{ github.event.inputs.table }}" --csv "${{ github.event.inputs.csv }}")
+
+          if [ -n "${{ github.event.inputs.key }}" ]; then
+            cmd+=(--key "${{ github.event.inputs.key }}")
+          fi
+
+          if [ "${{ github.event.inputs.mode }}" = "apply" ]; then
+            cmd+=(--apply)
+          fi
+
+          "${cmd[@]}"
