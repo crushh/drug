@@ -141,15 +141,16 @@ export async function searchChemicalEntities({
   const pool = getPool();
   const query = `%${q.trim()}%`;
   const safeLimit = Math.min(Math.max(limit, 1), 100);
+  const searchSynonyms = entityCategory === "radionuclide";
 
   const [rows] = await pool.query<RowDataPacket[]>(
     `SELECT entity_id, name
      FROM chemical_entity
      WHERE entity_category = ?
-       AND name LIKE ?
+       AND ${searchSynonyms ? "(name LIKE ? OR synonyms LIKE ?)" : "name LIKE ?"}
      ORDER BY name ASC
      LIMIT ?`,
-    [entityCategory, query, safeLimit]
+    searchSynonyms ? [entityCategory, query, query, safeLimit] : [entityCategory, query, safeLimit]
   );
 
   return rows.map((row) => ({

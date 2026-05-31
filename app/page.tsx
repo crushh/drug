@@ -384,6 +384,7 @@ function HomePageContent() {
           const entityCategory = activeTab as ChemicalEntityCategory;
           const label = getChemicalLabel(entityCategory);
           const accentColor = getEntityCategoryColor(entityCategory);
+          const supportsSynonymSearch = entityCategory === "radionuclide";
           return (
             <section
               style={{
@@ -396,7 +397,9 @@ function HomePageContent() {
             >
               <h3 style={{ marginTop: 0 }}>{`Search for ${label}:`}</h3>
               <div style={{ fontSize: 12, color: "#64748b", marginBottom: 8 }}>
-                {`Tip: Enter a ${label} name, press Enter to search, then click a result to view details.`}
+                {supportsSynonymSearch
+                  ? `Tip: Enter a ${label} name or synonym, press Enter to search, then click a result to view details.`
+                  : `Tip: Enter a ${label} name, press Enter to search, then click a result to view details.`}
               </div>
               <div style={{ display: "flex", gap: 8 }}>
                 <input
@@ -406,7 +409,11 @@ function HomePageContent() {
                   onKeyDown={(e) => {
                     if (e.key === "Enter") doChemicalSearch();
                   }}
-                  placeholder={`Enter a ${label} name and press Enter to search`}
+                  placeholder={
+                    supportsSynonymSearch
+                      ? `Enter a ${label} name or synonym and press Enter to search`
+                      : `Enter a ${label} name and press Enter to search`
+                  }
                   style={{
                     flex: 1,
                     height: 40,
@@ -495,22 +502,6 @@ function HomePageContent() {
           >
             Citation
           </h2>
-          <p style={{ margin: 0, fontSize: 14, lineHeight: 1.45 }}>
-            L. T. Shen, X. N. Sun, Z. Chen, Y. Guo, Z. Y. Shen, Y. Song, W. X. Xin,
-            H. Y. Ding, X. Y. Ma, W. B. Xu, W. Y. Zhou, J. X. Che, L. L. Tan,
-            L. S. Chen, S. Q. Chen, X. W. Dong *, L. Fang *, F. Zhu *.
-            ADCdb: the database of antibody-drug conjugates.{" "}
-            <strong style={{ color: "#008b8b", fontStyle: "italic" }}>Nucleic Acids Research.</strong>{" "}
-            52(D1): D1097-D1109 (2024).{" "}
-            <a
-              href="https://pubmed.ncbi.nlm.nih.gov/37831118/"
-              target="_blank"
-              rel="noreferrer"
-              style={{ color: "#008b8b", textDecoration: "none" }}
-            >
-              PMID: 37831118
-            </a>
-          </p>
         </section>
 
         <section>
