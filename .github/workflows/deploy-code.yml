@@ -1,0 +1,83 @@
+name: Deploy Code
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: "Branch to deploy"
+        required: true
+        default: "main"
+      confirm_deploy:
+        description: "Type DEPLOY_TO_PRODUCTION to deploy"
+        required: true
+        default: ""
+
+jobs:
+  deploy-code:
+    runs-on: ubuntu-latest
+    environment: production
+    concurrency:
+      group: production-code-deploy
+      cancel-in-progress: false
+
+    steps:
+      - name: Validate confirmation
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [ "${{ github.event.inputs.confirm_deploy }}" != "DEPLOY_TO_PRODUCTION" ]; then
+            echo "confirm_deploy must be DEPLOY_TO_PRODUCTION"
+            exit 1
+          fi
+
+      - name: Prepare SSH key
+        shell: bash
+        env:
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+        run: |
+          set -euo pipefail
+
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+
+      - name: Add server to known hosts
+        shell: bash
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_PORT: ${{ secrets.DEPLOY_PORT }}
+        run: |
+          set -euo pipefail
+
+          ssh-keyscan -p "${DEPLOY_PORT:-22}" "$DEPLOY_HOST" >> ~/.ssh/known_hosts
+
+      - name: Deploy on Aliyun server
+        shell: bash
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_PORT: ${{ secrets.DEPLOY_PORT }}
+          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+          PM2_APP_NAME: ${{ secrets.PM2_APP_NAME }}
+          BRANCH: ${{ github.event.inputs.branch }}
+        run: |
+          set -euo pipefail
+
+          remote_env=$(printf "DEPLOY_PATH=%q PM2_APP_NAME=%q BRANCH=%q" \
+            "$DEPLOY_PATH" "${PM2_APP_NAME:-rdc-api}" "$BRANCH")
+
+          ssh -i ~/.ssh/deploy_key -p "${DEPLOY_PORT:-22}" "$DEPLOY_USER@$DEPLOY_HOST" \
+            "$remote_env bash -s" <<'REMOTE'
+          set -euo pipefail
+
+          cd "$DEPLOY_PATH"
+          git fetch origin "$BRANCH"
+          git checkout "$BRANCH"
+          git pull --ff-only origin "$BRANCH"
+          npm ci
+          npm run build
+          pm2 restart "$PM2_APP_NAME"
+          pm2 save
+          REMOTE
