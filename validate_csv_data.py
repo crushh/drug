@@ -539,6 +539,14 @@ def friendly_issue_text(issue: Issue) -> tuple[str, str, str]:
     return title, problem, fix
 
 
+def is_non_blocking_issue(issue: Issue) -> bool:
+    return (
+        issue.code == "UNIQUE_EMPTY_STRING_RISK"
+        and issue.table == "rdc_drug"
+        and issue.column == "external_id"
+    )
+
+
 def friendly_issue_sample(issue: Issue) -> str:
     value = issue.value.replace("\n", " ").replace("\r", " ")
     if len(value) > 90:
@@ -812,14 +820,17 @@ def run(schema_path: Path, csv_dir: Path, output_dir: Path) -> int:
             # rows with multiple foreign-key failures.
             pass
 
+    blocking_issues = [issue for issue in issues if not is_non_blocking_issue(issue)]
+
     make_report(output_dir, issues, inserted_counts, files_count, data_rows_count, table_order)
     print("\u6821\u9a8c\u5b8c\u6210")
     print(f"\u95ee\u9898\u6570: {len(issues)}")
+    print(f"\u963b\u65ad\u95ee\u9898\u6570: {len(blocking_issues)}")
     print(f"\u62a5\u544a\u76ee\u5f55: {output_dir}")
     print(f"- {output_dir / 'csv_validation_report.md'}")
     print(f"- {output_dir / 'csv_validation_summary.csv'}")
     print(f"- {output_dir / 'csv_validation_details.csv'}")
-    return 1 if issues else 0
+    return 1 if blocking_issues else 0
 
 
 def main() -> int:

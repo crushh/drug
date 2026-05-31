@@ -21,6 +21,9 @@ Options:
   --key <columns>      Key column(s), comma-separated. Defaults to the first single-column unique key.
   --schema <path>      Schema SQL path. Defaults to main.sql.
   --env <path>         Env file path. Defaults to .env.local.
+  --compare-all-columns
+                       Read-only diff mode for tables without a stable key.
+  --replace-table      Replace the whole table with CSV rows. Requires --apply.
   --apply             Write changes to database. Without this flag, only prints a dry-run summary.
   --no-backup         Skip automatic backup table creation when using --apply.
 `);
@@ -32,6 +35,10 @@ function parseArgs(argv) {
     const arg = argv[i];
     if (arg === "--apply") {
       args.apply = true;
+    } else if (arg === "--compare-all-columns") {
+      args.compareAllColumns = true;
+    } else if (arg === "--replace-table") {
+      args.replaceTable = true;
     } else if (arg === "--no-backup") {
       args.noBackup = true;
     } else if (arg === "--help" || arg === "-h") {
@@ -242,6 +249,49 @@ async function loadExistingRows(connection, tableName, columns) {
   return rows;
 }
 
+async function insertRows(connection, tableName, columns, rows, table) {
+  for (const batch of chunk(rows, 200)) {
+    const placeholders = batch.map(() => `(${columns.map(() => "?").join(", ")})`).join(", ");
+    const sql = `
+      INSERT INTO ${sqlId(tableName)} (${columns.map(sqlId).join(", ")})
+      VALUES ${placeholders}
+    `;
+    const values = [];
+    for (const record of batch) {
+      for (const column of columns) {
+        const value = normalizeCsvValue(record[column], table.columns.get(column));
+        values.push(value === undefined ? null : value);
+      }
+    }
+    await connection.query(sql, values);
+  }
+}
+
+function rowContentKey(row, columns, table) {
+  return JSON.stringify(columns.map((column) => {
+    const value = row[column];
+    const normalized = normalizeCsvValue(value, table.columns.get(column));
+    return normalizeCompareValue(normalized === undefined ? null : normalized);
+  }));
+}
+
+function addToMultiMap(map, key, row) {
+  const items = map.get(key);
+  if (items) {
+    items.push(row);
+  } else {
+    map.set(key, [row]);
+  }
+}
+
+function takeFromMultiMap(map, key) {
+  const items = map.get(key);
+  if (!items || items.length === 0) return null;
+  const item = items.pop();
+  if (items.length === 0) map.delete(key);
+  return item;
+}
+
 async function main() {
   const args = parseArgs(process.argv);
   if (args.help) {
@@ -258,7 +308,19 @@ async function main() {
   const schemaPath = path.resolve(ROOT, args.schema || DEFAULT_SCHEMA);
   const envPath = path.resolve(ROOT, args.env || DEFAULT_ENV);
   const apply = Boolean(args.apply);
+  const compareAllColumns = Boolean(args.compareAllColumns);
+  const replaceTable = Boolean(args.replaceTable);
   const backup = apply && !args.noBackup;
+
+  if (apply && compareAllColumns) {
+    throw new Error("--compare-all-columns is read-only and cannot be used with --apply.");
+  }
+  if (replaceTable && !apply) {
+    throw new Error("--replace-table requires --apply.");
+  }
+  if (replaceTable && compareAllColumns) {
+    throw new Error("--replace-table cannot be combined with --compare-all-columns.");
+  }
 
   if (!fs.existsSync(csvPath)) throw new Error(`CSV file not found: ${csvPath}`);
   if (!fs.existsSync(schemaPath)) throw new Error(`Schema file not found: ${schemaPath}`);
@@ -268,12 +330,6 @@ async function main() {
   if (!table) throw new Error(`Table not found in schema: ${tableName}`);
 
   const { headers, records } = readCsv(csvPath);
-  const keyColumns = chooseKey(table, args.key);
-  for (const keyColumn of keyColumns) {
-    if (!table.columns.has(keyColumn)) throw new Error(`Key column ${keyColumn} does not exist in table ${tableName}.`);
-    if (!headers.includes(keyColumn)) throw new Error(`CSV is missing key column: ${keyColumn}`);
-  }
-
   const ignoredColumns = new Set(["id", "created_at", "updated_at"]);
   const unknownHeaders = headers.filter((header) => header && !table.columns.has(header));
   const dataColumns = headers.filter((header) => (
@@ -282,6 +338,114 @@ async function main() {
     && !table.columns.get(header).autoIncrement
     && !ignoredColumns.has(header)
   ));
+
+  const env = { ...loadEnv(envPath), ...process.env };
+  const connection = await mysql.createConnection({
+    host: env.DB_HOST || "127.0.0.1",
+    port: env.DB_PORT ? Number(env.DB_PORT) : 3306,
+    user: env.DB_USER || "root",
+    password: env.DB_PASS || "",
+    database: env.DB_NAME || "rdcdb",
+  });
+
+  if (compareAllColumns) {
+    try {
+      const existingRows = await loadExistingRows(connection, tableName, dataColumns);
+      const existingByContent = new Map();
+      for (const row of existingRows) {
+        addToMultiMap(existingByContent, rowContentKey(row, dataColumns, table), row);
+      }
+
+      const csvOnly = [];
+      const unchanged = [];
+      for (const record of records) {
+        const key = rowContentKey(record, dataColumns, table);
+        const matched = takeFromMultiMap(existingByContent, key);
+        if (matched) {
+          unchanged.push(record);
+        } else {
+          csvOnly.push(record);
+        }
+      }
+
+      const dbOnly = [...existingByContent.values()].reduce((total, rows) => total + rows.length, 0);
+
+      console.log(`Table: ${tableName}`);
+      console.log(`CSV: ${csvPath}`);
+      console.log(`Key: full row content`);
+      console.log(`Mode: dry-run`);
+      console.log("");
+      console.log(`CSV rows: ${records.length}`);
+      console.log(`Existing DB rows: ${existingRows.length}`);
+      console.log(`CSV-only rows: ${csvOnly.length}`);
+      console.log(`DB-only rows: ${dbOnly}`);
+      console.log(`Unchanged: ${unchanged.length}`);
+      if (unknownHeaders.length > 0) {
+        console.log(`Ignored CSV columns not in table: ${unknownHeaders.join(", ")}`);
+      }
+      if (csvOnly.length > 0) {
+        console.log("");
+        console.log("CSV-only samples:");
+        csvOnly.slice(0, 10).forEach((record) => {
+          console.log(`- line ${record.__line__}`);
+        });
+      }
+      console.log("");
+      console.log("Dry-run only. Full-row comparison is read-only and does not apply changes.");
+      return;
+    } finally {
+      await connection.end();
+    }
+  }
+
+  if (replaceTable) {
+    try {
+      console.log(`Table: ${tableName}`);
+      console.log(`CSV: ${csvPath}`);
+      console.log(`Mode: apply`);
+      console.log(`Write strategy: replace table`);
+      if (backup) console.log(`Backup: yes`);
+      console.log("");
+      console.log(`CSV rows: ${records.length}`);
+
+      if (backup) {
+        const now = new Date();
+        const timestamp = [
+          now.getFullYear(),
+          String(now.getMonth() + 1).padStart(2, "0"),
+          String(now.getDate()).padStart(2, "0"),
+          String(now.getHours()).padStart(2, "0"),
+          String(now.getMinutes()).padStart(2, "0"),
+          String(now.getSeconds()).padStart(2, "0"),
+        ].join("");
+        const backupTable = `${tableName}_backup_${timestamp}`;
+        await connection.query(`CREATE TABLE ${sqlId(backupTable)} AS SELECT * FROM ${sqlId(tableName)}`);
+        console.log(`Backup table created: ${backupTable}`);
+      }
+
+      await connection.beginTransaction();
+      try {
+        await connection.query(`DELETE FROM ${sqlId(tableName)}`);
+        await insertRows(connection, tableName, dataColumns, records, table);
+        await connection.commit();
+        console.log("");
+        console.log(`Applied successfully. Replaced rows: ${records.length}`);
+      } catch (error) {
+        await connection.rollback();
+        throw error;
+      }
+      return;
+    } finally {
+      await connection.end();
+    }
+  }
+
+  const keyColumns = chooseKey(table, args.key);
+  for (const keyColumn of keyColumns) {
+    if (!table.columns.has(keyColumn)) throw new Error(`Key column ${keyColumn} does not exist in table ${tableName}.`);
+    if (!headers.includes(keyColumn)) throw new Error(`CSV is missing key column: ${keyColumn}`);
+  }
+
   const updateColumns = dataColumns.filter((column) => !keyColumns.includes(column));
   const selectColumns = [...new Set([...keyColumns, ...updateColumns])];
 
@@ -305,15 +469,6 @@ async function main() {
     });
     throw new Error(`Please fix duplicate keys in CSV before updating. Count: ${duplicateCsvKeys.length}`);
   }
-
-  const env = { ...loadEnv(envPath), ...process.env };
-  const connection = await mysql.createConnection({
-    host: env.DB_HOST || "127.0.0.1",
-    port: env.DB_PORT ? Number(env.DB_PORT) : 3306,
-    user: env.DB_USER || "root",
-    password: env.DB_PASS || "",
-    database: env.DB_NAME || "rdcdb",
-  });
 
   try {
     const existingRows = await loadExistingRows(connection, tableName, selectColumns);

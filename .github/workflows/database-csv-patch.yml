@@ -1,0 +1,221 @@
+name: Database CSV Patch
+
+on:
+  workflow_dispatch:
+    inputs:
+      table:
+        description: "Table to apply when mode is apply"
+        required: true
+        type: choice
+        options:
+          - drug_chemical_rel
+          - rdc_drug
+          - target
+          - drug_target
+          - indication
+          - drug_indication
+          - chemical_entity
+          - chemical_affinity
+          - in_vitro
+          - in_vitro_measurement
+          - human_activity
+          - animal_in_vivo_study
+          - animal_in_vivo_biodist
+          - animal_in_vivo_efficacy
+          - reference
+          - rdc_drug_reference
+        default: "drug_chemical_rel"
+      csv:
+        description: "CSV path in repository. Leave default empty to use csv_templates_normalized/<table>.csv"
+        required: false
+        default: ""
+      mode:
+        description: "Run mode"
+        required: true
+        type: choice
+        options:
+          - dry-run
+          - apply
+        default: dry-run
+      confirm_apply:
+        description: "Type APPLY_TO_PRODUCTION when mode is apply"
+        required: false
+        default: ""
+
+jobs:
+  database-csv-patch:
+    runs-on: ubuntu-latest
+    environment: production
+    env:
+      DB_HOST: ${{ secrets.DB_HOST }}
+      DB_PORT: ${{ secrets.DB_PORT }}
+      DB_USER: ${{ secrets.DB_USER }}
+      DB_PASS: ${{ secrets.DB_PASS }}
+      DB_NAME: ${{ secrets.DB_NAME }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Validate inputs
+        shell: bash
+        env:
+          CSV_PATH: ${{ github.event.inputs.csv }}
+          TABLE_NAME: ${{ github.event.inputs.table }}
+          MODE: ${{ github.event.inputs.mode }}
+          CONFIRM_APPLY: ${{ github.event.inputs.confirm_apply }}
+        run: |
+          set -euo pipefail
+
+          key_for_table() {
+            case "$1" in
+              rdc_drug) echo "drug_id" ;;
+              target) echo "target_id" ;;
+              drug_target) echo "drug_id,target_id" ;;
+              indication) echo "indication_id" ;;
+              drug_indication) echo "drug_id,indication_id" ;;
+              chemical_entity) echo "entity_category,entity_id" ;;
+              drug_chemical_rel) echo "drug_id,relation_role,chemical_entity_id" ;;
+              chemical_affinity) echo "affinity_id" ;;
+              in_vitro) echo "in_vitro_id" ;;
+              in_vitro_measurement) echo "__replace_table" ;;
+              human_activity) echo "activity_id" ;;
+              animal_in_vivo_study) echo "study_id" ;;
+              animal_in_vivo_biodist) echo "__replace_table" ;;
+              animal_in_vivo_efficacy) echo "__replace_table" ;;
+              reference) echo "reference_id" ;;
+              rdc_drug_reference) echo "drug_id,reference_id" ;;
+              *)
+                echo "No key mapping for table: $1" >&2
+                return 1
+                ;;
+            esac
+          }
+
+          if [ -z "$CSV_PATH" ]; then
+            CSV_PATH="csv_templates_normalized/${TABLE_NAME}.csv"
+          fi
+
+          if [ ! -f "$CSV_PATH" ]; then
+            echo "CSV file does not exist: $CSV_PATH"
+            exit 1
+          fi
+
+          if [ "$MODE" = "apply" ] && [ "$CONFIRM_APPLY" != "APPLY_TO_PRODUCTION" ]; then
+            echo "mode=apply requires confirm_apply=APPLY_TO_PRODUCTION"
+            exit 1
+          fi
+
+          KEY_COLUMNS="$(key_for_table "$TABLE_NAME")"
+          echo "APPLY_TABLE=$TABLE_NAME" >> "$GITHUB_ENV"
+          echo "APPLY_CSV=$CSV_PATH" >> "$GITHUB_ENV"
+          echo "APPLY_KEY_COLUMNS=$KEY_COLUMNS" >> "$GITHUB_ENV"
+
+      - name: Validate CSV data
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          python validate_csv_data.py \
+            --schema main.sql \
+            --csv-dir csv_templates_normalized \
+            --out csv_validation_reports
+
+      - name: Upload validation report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: csv-validation-reports
+          path: csv_validation_reports/
+          if-no-files-found: ignore
+
+      - name: Check patch script syntax
+        run: node --check scripts/upsert_table_from_csv.js
+
+      - name: Dry-run all database diffs
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          key_for_table() {
+            case "$1" in
+              rdc_drug) echo "drug_id" ;;
+              target) echo "target_id" ;;
+              drug_target) echo "drug_id,target_id" ;;
+              indication) echo "indication_id" ;;
+              drug_indication) echo "drug_id,indication_id" ;;
+              chemical_entity) echo "entity_category,entity_id" ;;
+              drug_chemical_rel) echo "drug_id,relation_role,chemical_entity_id" ;;
+              chemical_affinity) echo "affinity_id" ;;
+              in_vitro) echo "in_vitro_id" ;;
+              in_vitro_measurement) echo "__replace_table" ;;
+              human_activity) echo "activity_id" ;;
+              animal_in_vivo_study) echo "study_id" ;;
+              animal_in_vivo_biodist) echo "__replace_table" ;;
+              animal_in_vivo_efficacy) echo "__replace_table" ;;
+              reference) echo "reference_id" ;;
+              rdc_drug_reference) echo "drug_id,reference_id" ;;
+              *)
+                echo "No key mapping for table: $1" >&2
+                return 1
+                ;;
+            esac
+          }
+
+          for csv_file in csv_templates_normalized/*.csv; do
+            table="$(basename "$csv_file" .csv)"
+            key_columns="$(key_for_table "$table")"
+
+            echo ""
+            echo "============================================================"
+            echo "Dry-run diff: $table"
+            echo "CSV: $csv_file"
+            echo "Key: $key_columns"
+            echo "============================================================"
+
+            if [ "$key_columns" = "__replace_table" ]; then
+              npm run upsert:csv -- \
+                --table "$table" \
+                --csv "$csv_file" \
+                --compare-all-columns
+            else
+              npm run upsert:csv -- \
+                --table "$table" \
+                --csv "$csv_file" \
+                --key "$key_columns"
+            fi
+          done
+
+      - name: Apply database patch
+        if: ${{ github.event.inputs.mode == 'apply' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [ "$APPLY_KEY_COLUMNS" = "__replace_table" ]; then
+            npm run upsert:csv -- \
+              --table "$APPLY_TABLE" \
+              --csv "$APPLY_CSV" \
+              --replace-table \
+              --apply
+          else
+            npm run upsert:csv -- \
+              --table "$APPLY_TABLE" \
+              --csv "$APPLY_CSV" \
+              --key "$APPLY_KEY_COLUMNS" \
+              --apply
+          fi
