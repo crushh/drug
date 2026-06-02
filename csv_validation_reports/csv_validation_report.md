@@ -5,8 +5,8 @@
 ## 概要
 
 - 检查文件数: 16
-- 检查数据行数: 36713
-- 需要关注的问题数: 2063
+- 检查数据行数: 36700
+- 需要关注的问题数: 2052
 
 ## 优先处理建议
 
@@ -31,32 +31,3 @@
 - `rdc_drug.csv` 第 8 行，`external_id` = 空
 - `rdc_drug.csv` 第 9 行，`external_id` = 空
 - `rdc_drug.csv` 第 10 行，`external_id` = 空
-
-### 2. 引用编号不存在 (10 条)
-
-**需要查看的文件**: `chemical_affinity.csv` (10 条)
-
-**问题说明**: chemical_entity_id 列填写的编号在对应主数据文件中找不到。
-
-**推荐修改**: 先确认编号是否写错；如果编号正确，请补充对应主数据记录。
-
-**样例**:
-- `chemical_affinity.csv` 第 168 行，`chemical_entity_id` = `LIG00169`
-- `chemical_affinity.csv` 第 169 行，`chemical_entity_id` = `LIG00169`
-- `chemical_affinity.csv` 第 170 行，`chemical_entity_id` = `LIG00169`
-- `chemical_affinity.csv` 第 171 行，`chemical_entity_id` = `LIG00169`
-- `chemical_affinity.csv` 第 172 行，`chemical_entity_id` = `LIG00169`
-- `chemical_affinity.csv` 第 173 行，`chemical_entity_id` = `LIG00169`
-- `chemical_affinity.csv` 第 174 行，`chemical_entity_id` = `LIG00169`
-- `chemical_affinity.csv` 第 175 行，`chemical_entity_id` = `LIG00169`
-
-### 3. 重复记录 (1 条)
-
-**需要查看的文件**: `indication.csv` (1 条)
-
-**问题说明**: 这一行和文件里的另一行内容重复，与第 8 行重复。
-
-**推荐修改**: 请人工确认两行是否表示同一条数据。若是同一条，保留信息更完整、写法更规范的一条，删除或合并另一条。
-
-**样例**:
-- `indication.csv` 第 70 行，`name,icd11_code` = `Myocardial Infarction|BA41.Z`，疑似与第 8 行重复

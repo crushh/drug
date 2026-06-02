@@ -1,5 +1,5 @@
 {
-  "issue_count": 2063,
+  "issue_count": 2052,
   "insertable_counts": {
     "rdc_drug": 1,
     "target": 135,
@@ -7,9 +7,9 @@
     "chemical_entity": 3436,
     "reference": 1491,
     "drug_target": 2097,
-    "drug_indication": 2921,
+    "drug_indication": 2919,
     "drug_chemical_rel": 9166,
-    "chemical_affinity": 577,
+    "chemical_affinity": 567,
     "in_vitro": 1582,
     "in_vitro_measurement": 1268,
     "human_activity": 796,
@@ -18486,105 +18486,6 @@
       "column": "external_id",
       "value": "",
       "details": "uk_external_id: external_id=; first line=2"
-    },
-    {
-      "code": "UNIQUE_DUPLICATE",
-      "table": "indication",
-      "file": "indication.csv",
-      "line": 70,
-      "column": "name,icd11_code",
-      "value": "Myocardial Infarction|BA41.Z",
-      "details": "uk_name_code: name=Myocardial Infarction, icd11_code=BA41.Z; first line=8"
-    },
-    {
-      "code": "FK_MISSING_PARENT",
-      "table": "chemical_affinity",
-      "file": "chemical_affinity.csv",
-      "line": "168",
-      "column": "chemical_entity_id",
-      "value": "LIG00169",
-      "details": "chemical_entity_id -> chemical_entity.entity_id"
-    },
-    {
-      "code": "FK_MISSING_PARENT",
-      "table": "chemical_affinity",
-      "file": "chemical_affinity.csv",
-      "line": "169",
-      "column": "chemical_entity_id",
-      "value": "LIG00169",
-      "details": "chemical_entity_id -> chemical_entity.entity_id"
-    },
-    {
-      "code": "FK_MISSING_PARENT",
-      "table": "chemical_affinity",
-      "file": "chemical_affinity.csv",
-      "line": "170",
-      "column": "chemical_entity_id",
-      "value": "LIG00169",
-      "details": "chemical_entity_id -> chemical_entity.entity_id"
-    },
-    {
-      "code": "FK_MISSING_PARENT",
-      "table": "chemical_affinity",
-      "file": "chemical_affinity.csv",
-      "line": "171",
-      "column": "chemical_entity_id",
-      "value": "LIG00169",
-      "details": "chemical_entity_id -> chemical_entity.entity_id"
-    },
-    {
-      "code": "FK_MISSING_PARENT",
-      "table": "chemical_affinity",
-      "file": "chemical_affinity.csv",
-      "line": "172",
-      "column": "chemical_entity_id",
-      "value": "LIG00169",
-      "details": "chemical_entity_id -> chemical_entity.entity_id"
-    },
-    {
-      "code": "FK_MISSING_PARENT",
-      "table": "chemical_affinity",
-      "file": "chemical_affinity.csv",
-      "line": "173",
-      "column": "chemical_entity_id",
-      "value": "LIG00169",
-      "details": "chemical_entity_id -> chemical_entity.entity_id"
-    },
-    {
-      "code": "FK_MISSING_PARENT",
-      "table": "chemical_affinity",
-      "file": "chemical_affinity.csv",
-      "line": "174",
-      "column": "chemical_entity_id",
-      "value": "LIG00169",
-      "details": "chemical_entity_id -> chemical_entity.entity_id"
-    },
-    {
-      "code": "FK_MISSING_PARENT",
-      "table": "chemical_affinity",
-      "file": "chemical_affinity.csv",
-      "line": "175",
-      "column": "chemical_entity_id",
-      "value": "LIG00169",
-      "details": "chemical_entity_id -> chemical_entity.entity_id"
-    },
-    {
-      "code": "FK_MISSING_PARENT",
-      "table": "chemical_affinity",
-      "file": "chemical_affinity.csv",
-      "line": "176",
-      "column": "chemical_entity_id",
-      "value": "LIG00169",
-      "details": "chemical_entity_id -> chemical_entity.entity_id"
-    },
-    {
-      "code": "FK_MISSING_PARENT",
-      "table": "chemical_affinity",
-      "file": "chemical_affinity.csv",
-      "line": "177",
-      "column": "chemical_entity_id",
-      "value": "LIG00169",
-      "details": "chemical_entity_id -> chemical_entity.entity_id"
     }
   ]
 }
