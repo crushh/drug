@@ -354,12 +354,15 @@ export default function DrugDetailPage({ params }: { params: { drug_id: string }
             <table style={{ width: "100%", tableLayout: "fixed", borderCollapse: "collapse", background: "#fff" ,padding:10}}>
 	              <tbody>
 	                {[
-	                  ["drug_id", g.drug_id],
-	                  ["external_id", g.external_id ?? "-"],
-	                  ["drug_name", g.drug_name],
-	                  ["drug_synonyms", g.drug_synonyms ?? "-"],
-	                  ["status", g.status ?? "-"],
-	                  ["smiles", g.smiles ?? "-"],
+                  ["drug_id", g.drug_id],
+                  ["external_id", g.external_id ?? "-"],
+                  ["drug_name", g.drug_name],
+                  ["drug_synonyms", g.drug_synonyms ?? "-"],
+                  ["status", g.status ?? "-"],
+                  ["indication", indications && indications.length > 0
+                    ? indications.map((ind: IndicationItem, idx: number) => `${ind.indication_id || "-"} | ${ind.name || "-"} | ${ind.icd11_code || "-"}`).join("; ")
+                    : "-"],
+                  ["smiles", g.smiles ?? "-"],
 	                  ["moa", g.moa ?? "-"],
 	                  ["structure_image", g.structure_image ?? "-"],
 	                  ["cold compound Name", c?.compound_name ?? "-"],
