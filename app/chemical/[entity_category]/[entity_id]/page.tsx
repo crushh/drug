@@ -72,6 +72,245 @@ type ChemicalDetail = {
   rdcs?: RdcSummary[];
 };
 
+// Related RDCs Visualization Component
+function RelatedRdcGraph({
+  entityCategory,
+  basic,
+  rdcs,
+  mainColor,
+}: {
+  entityCategory: string;
+  basic: Basic | undefined;
+  rdcs: RdcSummary[];
+  mainColor: string;
+}) {
+  const entityName = basic?.name || basic?.entity_id || "";
+  const [openRelated, setOpenRelated] = useState(true);
+  const [hoveredDrug, setHoveredDrug] = useState<RdcSummary | null>(null);
+  const [hoveredCenter, setHoveredCenter] = useState(false);
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    setMousePos({ x: e.clientX, y: e.clientY });
+  };
+
+  const drugPositions = useMemo(() => {
+    if (rdcs.length === 0) return [];
+    const radius = 180;
+    const centerX = 250;
+    const centerY = 250;
+    return rdcs.map((drug, index) => {
+      const angle = (index / rdcs.length) * 2 * Math.PI - Math.PI / 2;
+      return {
+        ...drug,
+        x: centerX + radius * Math.cos(angle),
+        y: centerY + radius * Math.sin(angle),
+        angle,
+      };
+    });
+  }, [rdcs]);
+
+  const tooltipStyle: CSSProperties = {
+    position: "fixed",
+    left: mousePos.x + 15,
+    top: mousePos.y + 15,
+    background: "#fff",
+    border: "2px solid #1F2937",
+    borderRadius: 8,
+    padding: 12,
+    boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+    zIndex: 1000,
+    minWidth: 200,
+    pointerEvents: "none",
+  };
+
+  // Build center tooltip content based on entity category
+  const renderCenterTooltip = () => {
+    if (!basic) return null;
+    const rows: { label: string; value: string }[] = [];
+
+    switch (entityCategory) {
+      case "radionuclide":
+        rows.push(
+          { label: "Radionuclide ID", value: basic.entity_id },
+          { label: "Name", value: basic.name || "-" },
+          { label: "Symbol", value: basic.radionuclide_symbol || "-" },
+          { label: "Half Life", value: basic.radionuclide_half_life || "-" },
+          { label: "Emission", value: basic.radionuclide_emission || "-" },
+          { label: "Energy", value: basic.radionuclide_energy || "-" }
+        );
+        break;
+      case "chelator":
+        rows.push(
+          { label: "Chelator ID", value: basic.entity_id },
+          { label: "Name", value: basic.name || "-" },
+          { label: "Formula", value: basic.formula || "-" },
+          { label: "Molecular Weight", value: basic.molecular_weight?.toString() || "-" }
+        );
+        break;
+      case "ligand":
+        rows.push(
+          { label: "Ligand ID", value: basic.entity_id },
+          { label: "Name", value: basic.name || "-" },
+          { label: "External ID", value: basic.external_id || "-" },
+          { label: "Formula", value: basic.formula || "-" }
+        );
+        break;
+      case "cold_compound":
+        rows.push(
+          { label: "Cold Compound ID", value: basic.entity_id },
+          { label: "Name", value: basic.name || "-" },
+          { label: "Formula", value: basic.formula || "-" },
+          { label: "Molecular Weight", value: basic.molecular_weight?.toString() || "-" }
+        );
+        break;
+      default:
+        rows.push(
+          { label: "ID", value: basic.entity_id },
+          { label: "Name", value: basic.name || "-" }
+        );
+    }
+
+    return (
+      <>
+        <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 8, color: "#0f172a" }}>
+          {entityName}
+        </div>
+        <div style={{ fontSize: 12, color: "#475569", lineHeight: 1.6 }}>
+          {rows.map((r) => (
+            <div key={r.label}><strong>{r.label}:</strong> {r.value}</div>
+          ))}
+        </div>
+      </>
+    );
+  };
+
+  return (
+    <>
+      <section
+        style={{
+          marginTop: 16,
+          background: "#F8FAFC",
+          border: `1px solid ${mainColor}`,
+          borderRadius: 10,
+          overflow: "hidden",
+        }}
+      >
+        <div
+          onClick={() => setOpenRelated((v) => !v)}
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            padding: "10px 12px",
+            background: mainColor,
+            color: "#fff",
+            fontWeight: 700,
+            cursor: "pointer",
+          }}
+        >
+          <span>Related RDCs ({rdcs.length})</span>
+          <span style={{ fontSize: 16 }}>{openRelated ? "▾" : "▸"}</span>
+        </div>
+        {openRelated && (
+          <div style={{ padding: 24, background: "#fff", display: "flex", justifyContent: "center" }}>
+            <svg width={500} height={500} onMouseMove={handleMouseMove}>
+              {/* Lines to drugs */}
+              {drugPositions.map((drug, index) => (
+                <line
+                  key={`line-${index}`}
+                  x1={250}
+                  y1={250}
+                  x2={drug.x}
+                  y2={drug.y}
+                  stroke="#9ca3af"
+                  strokeWidth={1}
+                />
+              ))}
+
+              {/* Drug circles - white with #C2C0D9 border */}
+              {drugPositions.map((drug, index) => {
+                let rotationAngle = (drug.angle * 180) / Math.PI;
+                const isRightSide = Math.cos(drug.angle) >= 0;
+                if (!isRightSide) {
+                  // rotationAngle += 180;
+                }
+                return (
+                  <g key={`drug-${index}`}>
+                    <circle
+                      cx={drug.x}
+                      cy={drug.y}
+                      r={5}
+                      fill="#ffffff"
+                      stroke="#C2C0D9"
+                      strokeWidth={2}
+                      style={{ cursor: "pointer" }}
+                      onMouseEnter={() => setHoveredDrug(drug)}
+                      onMouseLeave={() => setHoveredDrug(null)}
+                      onClick={() => window.open(`/rdc/${drug.drug_id}`, "_blank")}
+                    />
+                    <text
+                      x={drug.x}
+                      y={drug.y}
+                      textAnchor="start"
+                      dominantBaseline="middle"
+                      fill="#1F2937"
+                      fontSize={8}
+                      fontWeight={600}
+                      transform={`rotate(${rotationAngle}, ${drug.x}, ${drug.y}) translate(8, 0)`}
+                      style={{ pointerEvents: "none" }}
+                    >
+                      {drug.drug_id}
+                    </text>
+                  </g>
+                );
+              })}
+
+              {/* Invisible center area for hover */}
+              <circle
+                cx={250}
+                cy={250}
+                r={40}
+                fill="transparent"
+                stroke="none"
+                style={{ cursor: "pointer" }}
+                onMouseEnter={() => setHoveredCenter(true)}
+                onMouseLeave={() => setHoveredCenter(false)}
+              />
+            </svg>
+          </div>
+        )}
+      </section>
+
+      {/* Tooltip for drug nodes */}
+      {hoveredDrug && !hoveredCenter && (
+        <div style={tooltipStyle}>
+          <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 8, color: "#0f172a" }}>
+            {hoveredDrug.drug_name || entityName}
+          </div>
+          <div style={{ fontSize: 12, color: "#475569", lineHeight: 1.6 }}>
+            <div><strong>ID:</strong> {hoveredDrug.drug_id || "-"}</div>
+            <div><strong>Name:</strong> {hoveredDrug.drug_name || entityName}</div>
+            <div><strong>Status:</strong> {hoveredDrug.status ?? "-"}</div>
+            <div><strong>Cold Compound:</strong> {hoveredDrug.compound_name ?? "-"}</div>
+            <div><strong>Ligand:</strong> {hoveredDrug.ligand_name ?? "-"}</div>
+            <div><strong>Linker:</strong> {hoveredDrug.linker_name ?? "-"}</div>
+            <div><strong>Chelator:</strong> {hoveredDrug.chelator_name ?? "-"}</div>
+            <div><strong>Radionuclide:</strong> {hoveredDrug.radionuclide_name ?? "-"}</div>
+          </div>
+        </div>
+      )}
+
+      {/* Tooltip for center */}
+      {hoveredCenter && (
+        <div style={tooltipStyle}>
+          {renderCenterTooltip()}
+        </div>
+      )}
+    </>
+  );
+}
+
 type FieldBoxProps = {
   label: string;
   value: ReactNode;
@@ -209,6 +448,7 @@ export default function ChemicalDetailPage({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [detail, setDetail] = useState<ChemicalDetail | null>(null);
+  const [rdcListData, setRdcListData] = useState<RdcSummary[]>([]);
   const [openBasic, setOpenBasic] = useState(true);
   const [openRdcSection, setOpenRdcSection] = useState(true);
 
@@ -218,6 +458,7 @@ export default function ChemicalDetailPage({
       setLoading(true);
       setError(null);
       try {
+        // Fetch main detail data
         const url = isSummaryOnlyCategory
           ? `/api/chemical/${encodeURIComponent(entity_category)}/${encodeURIComponent(
               entity_id
@@ -232,6 +473,20 @@ export default function ChemicalDetailPage({
         }
         const data = (await res.json()) as ChemicalDetail;
         if (!cancelled) setDetail(data);
+
+        // For non-summary categories, also fetch rdc-list for the graph
+        if (!isSummaryOnlyCategory) {
+          const listRes = await fetch(
+            `/api/chemical/${encodeURIComponent(entity_category)}/${encodeURIComponent(
+              entity_id
+            )}/rdc-list`,
+            { cache: "no-store" }
+          );
+          if (listRes.ok) {
+            const listData = (await listRes.json()) as ChemicalDetail;
+            if (!cancelled) setRdcListData(listData.rdcs ?? []);
+          }
+        }
       } catch (e: any) {
         if (!cancelled) setError(e?.message || String(e));
       } finally {
@@ -558,218 +813,235 @@ export default function ChemicalDetailPage({
       )}
 
       {isSummaryOnlyCategory && (
-        <section
-          style={{
-            marginTop: 16,
-            background: "#F8FAFC",
-            border: `1px solid ${mainColor}`,
-            borderRadius: 10,
-            overflow: "hidden",
-          }}
-        >
-          <div
-            onClick={() => setOpenRdcSection((v) => !v)}
+        <>
+          <RelatedRdcGraph
+            entityCategory={entity_category}
+            basic={basic}
+            rdcs={rdcList}
+            mainColor={mainColor}
+          />
+          <section
             style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              padding: "10px 12px",
-              background: mainColor,
-              color: "#fff",
-              fontWeight: 700,
-              cursor: "pointer",
+              marginTop: 16,
+              background: "#F8FAFC",
+              border: `1px solid ${mainColor}`,
+              borderRadius: 10,
+              overflow: "hidden",
             }}
           >
-            <span>Complete List of RDCs Related to This Target</span>
-            <span style={{ fontSize: 16 }}>{openRdcSection ? "▾" : "▸"}</span>
-          </div>
-
-          {openRdcSection && (
             <div
+              onClick={() => setOpenRdcSection((v) => !v)}
               style={{
-                padding: 12,
-                background: "#fff",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                padding: "10px 12px",
+                background: mainColor,
+                color: "#fff",
+                fontWeight: 700,
+                cursor: "pointer",
               }}
             >
+              <span>Complete List of RDCs Related to This Target</span>
+              <span style={{ fontSize: 16 }}>{openRdcSection ? "▾" : "▸"}</span>
+            </div>
+
+            {openRdcSection && (
               <div
                 style={{
-                  overflow: "hidden",
+                  padding: 12,
                   background: "#fff",
                 }}
               >
                 <div
                   style={{
-                    padding: "8px 12px",
-                    fontWeight: 700,
-                    fontSize: 14,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
+                    overflow: "hidden",
+                    background: "#fff",
                   }}
                 >
-                </div>
-                <div style={{ overflowX: "auto" }}>
-                  <table
+                  <div
                     style={{
-                      width: "100%",
-                      borderCollapse: "collapse",
-                      minWidth: 720,
+                      padding: "8px 12px",
+                      fontWeight: 700,
+                      fontSize: 14,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
                     }}
                   >
-                    <thead>
-                      <tr>
-                        {[
-                          "RDC Info",
-                          "RDC Name",
-                          "cold compound",
-                          "ligand",
-                          "linker",
-                          "chelator",
-                          "radionuclide",
-                        ].map((label, idx) => (
-                          <th
-                            key={label}
-                            style={{
-                              padding: "10px 12px",
-                              borderBottom: "1px solid #e5e7eb",
-                              textAlign: label === "RDC Info" ? "left" : "center",
-                              fontSize: 14,
-                              fontWeight: 600,
-                              color: "#111827",
-                              whiteSpace: "nowrap",
-                              position: idx === 0 ? "sticky" as const : undefined,
-                              left: idx === 0 ? 0 : undefined,
-                              zIndex: idx === 0 ? 2 : undefined,
-                              background: idx === 0 ? "#fff" : undefined,
-                            }}
-                          >
-                            {label}
-                          </th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {rdcList.map((item) => (
-                        <tr key={item.drug_id}>
-                          <td
-                            style={{
-                              padding: "12px",
-                              borderBottom: "1px solid #e5e7eb",
-                              position: "sticky",
-                              left: 0,
-                              zIndex: 1,
-                              background: "#fff",
-                            }}
-                          >
-                            <a
-                              href={`/rdc/${encodeURIComponent(item.drug_id)}`}
-                              target="_blank"
-                              rel="noreferrer"
+                  </div>
+                  <div style={{ overflowX: "auto" }}>
+                    <table
+                      style={{
+                        width: "100%",
+                        borderCollapse: "collapse",
+                        minWidth: 720,
+                      }}
+                    >
+                      <thead>
+                        <tr>
+                          {[
+                            "RDC Info",
+                            "RDC Name",
+                            "cold compound",
+                            "ligand",
+                            "linker",
+                            "chelator",
+                            "radionuclide",
+                          ].map((label, idx) => (
+                            <th
+                              key={label}
                               style={{
-                                padding: "6px 12px",
-                                background: PRIMARY_COLOR,
-                                borderRadius: 8,
-                                boxShadow: "rgb(86, 86, 86) 4px 3px 0px 0px",
-                                textDecoration: "none",
-                                color: "#fff",
+                                padding: "10px 12px",
+                                borderBottom: "1px solid #e5e7eb",
+                                textAlign: label === "RDC Info" ? "left" : "center",
                                 fontSize: 14,
-                                fontWeight: 700,
-                                display: "inline-block",
+                                fontWeight: 600,
+                                color: "#111827",
+                                whiteSpace: "nowrap",
+                                position: idx === 0 ? "sticky" as const : undefined,
+                                left: idx === 0 ? 0 : undefined,
+                                zIndex: idx === 0 ? 2 : undefined,
+                                background: idx === 0 ? "#fff" : undefined,
                               }}
                             >
-                              RDC
-                            </a>
-                          </td>
-                          <td
-                            style={{
-                              padding: "12px",
-                              borderBottom: "1px solid #e5e7eb",
-                              fontSize: 14,
-                              color: "#111827",
-                              whiteSpace: "nowrap",
-                            }}
-                          >
-                            {item.drug_name || "-"}
-                          </td>
-                          <td
-                            style={{
-                              padding: "12px",
-                              borderBottom: "1px solid #e5e7eb",
-                              fontSize: 14,
-                              color: "#111827",
-                              textAlign: "center",
-                            }}
-                          >
-                            {item.compound_name || "-"}
-                          </td>
-                          <td
-                            style={{
-                              padding: "12px",
-                              borderBottom: "1px solid #e5e7eb",
-                              fontSize: 14,
-                              color: "#111827",
-                              textAlign: "center",
-                            }}
-                          >
-                            {item.ligand_name || "-"}
-                          </td>
-                          <td
-                            style={{
-                              padding: "12px",
-                              borderBottom: "1px solid #e5e7eb",
-                              fontSize: 14,
-                              color: "#111827",
-                              textAlign: "center",
-                            }}
-                          >
-                            {item.linker_name || "-"}
-                          </td>
-                          <td
-                            style={{
-                              padding: "12px",
-                              borderBottom: "1px solid #e5e7eb",
-                              fontSize: 14,
-                              color: "#111827",
-                              textAlign: "center",
-                            }}
-                          >
-                            {item.chelator_name || "-"}
-                          </td>
-                          <td
-                            style={{
-                              padding: "12px",
-                              borderBottom: "1px solid #e5e7eb",
-                              fontSize: 14,
-                              color: "#111827",
-                              textAlign: "center",
-                            }}
-                          >
-                            {item.radionuclide_name || "-"}
-                          </td>
+                              {label}
+                            </th>
+                          ))}
                         </tr>
-                      ))}
-                      {rdcList.length === 0 && (
-                        <tr>
-                          <td
-                            colSpan={7}
-                            style={{
-                              padding: "14px 12px",
-                              textAlign: "center",
-                              fontSize: 14,
-                              color: "#64748b",
-                            }}
-                          >
-                            No RDC found for this chemical entity.
-                          </td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody>
+                        {rdcList.map((item) => (
+                          <tr key={item.drug_id}>
+                            <td
+                              style={{
+                                padding: "12px",
+                                borderBottom: "1px solid #e5e7eb",
+                                position: "sticky",
+                                left: 0,
+                                zIndex: 1,
+                                background: "#fff",
+                              }}
+                            >
+                              <a
+                                href={`/rdc/${encodeURIComponent(item.drug_id)}`}
+                                target="_blank"
+                                rel="noreferrer"
+                                style={{
+                                  padding: "6px 12px",
+                                  background: PRIMARY_COLOR,
+                                  borderRadius: 8,
+                                  boxShadow: "rgb(86, 86, 86) 4px 3px 0px 0px",
+                                  textDecoration: "none",
+                                  color: "#fff",
+                                  fontSize: 14,
+                                  fontWeight: 700,
+                                  display: "inline-block",
+                                }}
+                              >
+                                RDC
+                              </a>
+                            </td>
+                            <td
+                              style={{
+                                padding: "12px",
+                                borderBottom: "1px solid #e5e7eb",
+                                fontSize: 14,
+                                color: "#111827",
+                                whiteSpace: "nowrap",
+                              }}
+                            >
+                              {item.drug_name || "-"}
+                            </td>
+                            <td
+                              style={{
+                                padding: "12px",
+                                borderBottom: "1px solid #e5e7eb",
+                                fontSize: 14,
+                                color: "#111827",
+                                textAlign: "center",
+                              }}
+                            >
+                              {item.compound_name || "-"}
+                            </td>
+                            <td
+                              style={{
+                                padding: "12px",
+                                borderBottom: "1px solid #e5e7eb",
+                                fontSize: 14,
+                                color: "#111827",
+                                textAlign: "center",
+                              }}
+                            >
+                              {item.ligand_name || "-"}
+                            </td>
+                            <td
+                              style={{
+                                padding: "12px",
+                                borderBottom: "1px solid #e5e7eb",
+                                fontSize: 14,
+                                color: "#111827",
+                                textAlign: "center",
+                              }}
+                            >
+                              {item.linker_name || "-"}
+                            </td>
+                            <td
+                              style={{
+                                padding: "12px",
+                                borderBottom: "1px solid #e5e7eb",
+                                fontSize: 14,
+                                color: "#111827",
+                                textAlign: "center",
+                              }}
+                            >
+                              {item.chelator_name || "-"}
+                            </td>
+                            <td
+                              style={{
+                                padding: "12px",
+                                borderBottom: "1px solid #e5e7eb",
+                                fontSize: 14,
+                                color: "#111827",
+                                textAlign: "center",
+                              }}
+                            >
+                              {item.radionuclide_name || "-"}
+                            </td>
+                          </tr>
+                        ))}
+                        {rdcList.length === 0 && (
+                          <tr>
+                            <td
+                              colSpan={7}
+                              style={{
+                                padding: "14px 12px",
+                                textAlign: "center",
+                                fontSize: 14,
+                                color: "#64748b",
+                              }}
+                            >
+                              No RDC found for this chemical entity.
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
-        </section>
+            )}
+          </section>
+        </>
+      )}
+
+      {!isSummaryOnlyCategory && rdcListData.length > 0 && (
+        <RelatedRdcGraph
+          entityCategory={entity_category}
+          basic={basic}
+          rdcs={rdcListData}
+          mainColor={mainColor}
+        />
       )}
     </main>
   );

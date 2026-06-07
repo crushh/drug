@@ -19,6 +19,7 @@ type DetailResponse = {
   chemicals?: {
     entities?: Record<string, Array<{ entity_id: string; name: string }>>;
   };
+  targets?: Array<{ target_id: string; name: string | null; external_id: string | null; description: string | null }>;
 };
 
 export default function SearchListPage({
@@ -55,7 +56,7 @@ export default function SearchListPage({
         if (cancelled) return;
         setItems(list);
 
-        // Fetch details for each (chemicals summary)
+        // Fetch details for each (chemicals and targets summary)
         const detailPairs = await Promise.all(
           list.map(async (it) => {
             const r = await fetch(`/api/rdc/${encodeURIComponent(it.drug_id)}?expand=chemicals&all_entities=true`, {
@@ -264,6 +265,32 @@ export default function SearchListPage({
                   }}
                 >
                   radionuclide Info
+                </a>
+
+                <div>target Name： {(() => {
+                  const targets = details[it.drug_id]?.targets;
+                  return targets && targets.length > 0
+                    ? targets.map(t => t.name).filter(Boolean).join(", ")
+                    : "-";
+                })()}</div>
+                <a
+                  href={(() => {
+                    const targets = details[it.drug_id]?.targets;
+                    const firstTarget = targets && targets.length > 0 ? targets[0] : null;
+                    return firstTarget?.target_id ? `/target/${firstTarget.target_id}` : "#";
+                  })()}
+                  target="_blank"
+                  style={{
+                    padding: "6px 12px",
+                    background: "#3b82f6",
+                    border: "2px solid #111827",
+                    borderRadius: 8,
+                    textDecoration: "none",
+                    color: "#fff",
+                    fontWeight: 600,
+                  }}
+                >
+                  target Info
                 </a>
               </div>
             </div>
