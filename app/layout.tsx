@@ -1,4 +1,4 @@
-﻿import type { Metadata } from "next";
+import type { Metadata } from "next";
 import Link from "next/link";
 import "./globals.css";
 
@@ -41,6 +41,18 @@ export default function RootLayout({
                   <Link href="/?tab=radionuclide" role="menuitem">Search for Radionuclide</Link>
                 </div>
               </div>
+              </li>
+              <li>
+              <Link href="/about" className="site-nav__item">
+                <span className="site-nav__icon" aria-hidden="true">ℹ</span>
+                <span>About</span>
+              </Link>
+              </li>
+              <li>
+              <Link href="/manual" className="site-nav__item">
+                <span className="site-nav__icon" aria-hidden="true">📖</span>
+                <span>Manual</span>
+              </Link>
               </li>
             </nav>
           </div>
