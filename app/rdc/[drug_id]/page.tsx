@@ -389,7 +389,24 @@ export default function DrugDetailPage({ params }: { params: { drug_id: string }
 
 	                  let content: any = value as any;
 
-	                  if (isCold || isLigand || isLinker || isChelator || isRadionuclide) {
+                  if (label === "structure_image" && value && value !== "-") {
+                    const assetBase = process.env.NEXT_PUBLIC_ASSET_BASE ?? "";
+                    const imgSrc = (value as string).startsWith("http")
+                      ? (value as string)
+                      : `${assetBase}/structure/${value as string}.png`;
+                    content = (
+                      <img
+                        src={imgSrc}
+                        alt="Structure"
+                        style={{ maxWidth: "100%", maxHeight: 300, objectFit: "contain" }}
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).style.display = "none";
+                        }}
+                      />
+                    );
+                  }
+
+                  if (isCold || isLigand || isLinker || isChelator || isRadionuclide) {
 	                    let category = "";
 	                    let buttonLabel = "";
 
