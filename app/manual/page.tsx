@@ -2,7 +2,7 @@ export default function ManualPage() {
   return (
     <main style={{ padding: 24 }}>
       <div style={{ maxWidth: 900, margin: "0 auto" }}>
-        <h1 style={{ fontSize: 28, fontWeight: 700, marginBottom: 24, color: "#0f766e" }}>
+        <h1 style={{ fontSize: 28, fontWeight: 700, marginBottom: 24, color: "#0090B5" }}>
           Manual
         </h1>
 

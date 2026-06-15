@@ -1,4 +1,4 @@
-export const PRIMARY_COLOR = "#0f766e";
+export const PRIMARY_COLOR = "#0090B5";
 
 export const ENTITY_CATEGORY_COLORS: Record<string, string> = {
   cold_compound: "#2f9e44",

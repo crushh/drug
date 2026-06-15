@@ -1,7 +1,18 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { getEntityCategoryColor } from "@/lib/entity-category-colors";
+import { getEntityCategoryColor, PRIMARY_COLOR } from "@/lib/entity-category-colors";
+
+function getLightEntityCategoryColor(category: string) {
+  const map: Record<string, string> = {
+    cold_compound: "#dcfce7",
+    ligand: "#dbeafe",
+    linker: "#fef3c7",
+    chelator: "#ffedd5",
+    radionuclide: "#ede9fe",
+  };
+  return map[category] ?? "#e0f2fe";
+}
 
 type SearchItem = {
   drug_id: string;
@@ -123,9 +134,9 @@ export default function SearchListPage({
                   href={`/rdc/${it.drug_id}`}
                   style={{
                     padding: "6px 12px",
-                    background: "#FBCFE8",
-                    border: "2px solid #9D174D",
-                    color: "#111827",
+                    background: "#fce7f3",
+                    border: "1px solid #9D174D",
+                    color: "#9D174D",
                     borderRadius: 8,
                     textDecoration: "none",
                     fontSize: 14,
@@ -150,9 +161,9 @@ export default function SearchListPage({
                     href={`/rdc/${it.drug_id}`}
                     style={{
                       padding: "6px 12px",
-                      background: "#FBCFE8",
-                      border: "2px solid #9D174D",
-                      color: "#111827",
+                      background: "#fce7f3",
+                      border: "1px solid #9D174D",
+                      color: "#9D174D",
                       borderRadius: 8,
                       textDecoration: "none",
                       fontSize: 14,
@@ -164,10 +175,10 @@ export default function SearchListPage({
                   </a>
                 </div>
 
-                <div style={{ color: "#fb923c" }}>Type： {it.type ?? "-"}</div>
+                <div style={{ color: "#111827" }}>Type： {it.type ?? "-"}</div>
                 <div />
 
-                <div style={{ color: "#16a34a" }}>cold compound Name： {it.cold_compound_name ?? "-"}</div>
+                <div style={{ color: "#111827" }}>cold compound Name： {it.cold_compound_name ?? "-"}</div>
                 <a
                   href={(() => {
                     const id = chemicalFirstEntityId(it.drug_id, "cold_compound");
@@ -176,11 +187,11 @@ export default function SearchListPage({
                   target="_blank"
                   style={{
                     padding: "6px 12px",
-                    background: getEntityCategoryColor("cold_compound"),
-                    border: "2px solid #111827",
+                    background: getLightEntityCategoryColor("cold_compound"),
+                    border: "1px solid " + getEntityCategoryColor("cold_compound"),
                     borderRadius: 8,
                     textDecoration: "none",
-                    color: "#fff",
+                    color: getEntityCategoryColor("cold_compound"),
                     fontWeight: 600,
                   }}
                 >
@@ -196,11 +207,11 @@ export default function SearchListPage({
                   target="_blank"
                   style={{
                     padding: "6px 12px",
-                    background: getEntityCategoryColor("ligand"),
-                    border: "2px solid #111827",
+                    background: getLightEntityCategoryColor("ligand"),
+                    border: "1px solid " + getEntityCategoryColor("ligand"),
                     borderRadius: 8,
                     textDecoration: "none",
-                    color: "#fff",
+                    color: getEntityCategoryColor("ligand"),
                     fontWeight: 600,
                   }}
                 >
@@ -216,11 +227,11 @@ export default function SearchListPage({
                   target="_blank"
                   style={{
                     padding: "6px 12px",
-                    background: getEntityCategoryColor("linker"),
-                    border: "2px solid #111827",
+                    background: getLightEntityCategoryColor("linker"),
+                    border: "1px solid " + getEntityCategoryColor("linker"),
                     borderRadius: 8,
                     textDecoration: "none",
-                    color: "#fff",
+                    color: getEntityCategoryColor("linker"),
                     fontWeight: 600,
                   }}
                 >
@@ -236,11 +247,11 @@ export default function SearchListPage({
                   target="_blank"
                   style={{
                     padding: "6px 12px",
-                    background: getEntityCategoryColor("chelator"),
-                    border: "2px solid #111827",
+                    background: getLightEntityCategoryColor("chelator"),
+                    border: "1px solid " + getEntityCategoryColor("chelator"),
                     borderRadius: 8,
                     textDecoration: "none",
-                    color: "#fff",
+                    color: getEntityCategoryColor("chelator"),
                     fontWeight: 600,
                   }}
                 >
@@ -256,11 +267,11 @@ export default function SearchListPage({
                   target="_blank"
                   style={{
                     padding: "6px 12px",
-                    background: getEntityCategoryColor("radionuclide"),
-                    border: "2px solid #111827",
+                    background: getLightEntityCategoryColor("radionuclide"),
+                    border: "1px solid " + getEntityCategoryColor("radionuclide"),
                     borderRadius: 8,
                     textDecoration: "none",
-                    color: "#fff",
+                    color: getEntityCategoryColor("radionuclide"),
                     fontWeight: 600,
                   }}
                 >
@@ -282,11 +293,11 @@ export default function SearchListPage({
                   target="_blank"
                   style={{
                     padding: "6px 12px",
-                    background: "#3b82f6",
-                    border: "2px solid #111827",
+                    background: "#dbeafe",
+                    border: "1px solid #3b82f6",
                     borderRadius: 8,
                     textDecoration: "none",
-                    color: "#fff",
+                    color: "#3b82f6",
                     fontWeight: 600,
                   }}
                 >

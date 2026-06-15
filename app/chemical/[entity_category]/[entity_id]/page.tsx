@@ -599,10 +599,10 @@ export default function ChemicalDetailPage({
                     ? `${basic.structure_image}`
                     : null;
                 const structureUrl = buildAssetUrl(structureName, "structure");
-                const mol2dName = typeof basic.mol2d_path === "string" && basic.mol2d_path ? `${basic.mol2d_path}.mol` : null;
-                const mol3dName = typeof basic.mol3d_path === "string" && basic.mol3d_path ? `${basic.mol3d_path}.sdf` : null;
-                const mol2d = buildAssetUrl(mol2dName, "rdc_2d");
-                const mol3d = buildAssetUrl(mol3dName, "rdc_3d");
+                const mol2dName = typeof basic.mol2d_path === "string" && basic.mol2d_path ? basic.mol2d_path : null;
+                const mol3dName = typeof basic.mol3d_path === "string" && basic.mol3d_path ? basic.mol3d_path : null;
+                const mol2d = buildAssetUrl(mol2dName, "rdc_2d", "cdxml");
+                const mol3d = buildAssetUrl(mol3dName, "rdc_3d", "sdf");
                 return (
                   <div style={{ width: "100%", overflowX: "auto" }}>
                     <table style={{ width: "100%", minWidth: 360, borderCollapse: "collapse" }}>
@@ -725,10 +725,10 @@ export default function ChemicalDetailPage({
                                           }}
                                         >
                                           <span style={{ fontSize: 18 }}>⬇</span>
-                                          <span>3D MOL</span>
+                                          <span>3D SDF</span>
                                         </a>
                                       ) : (
-                                        <span style={{ color: "#94a3b8" }}>3D MOL not available</span>
+                                        <span style={{ color: "#94a3b8" }}>3D SDF not available</span>
                                       )}
                                       {mol2d ? (
                                         <a

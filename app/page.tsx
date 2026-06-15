@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -241,8 +241,7 @@ function HomePageContent() {
           <section
             style={{
               marginTop: 18,
-              background: "#e6fffb",
-              border: "1px solid #99f6e4",
+              border: "1px solid #0090B5",
               borderRadius: 12,
               padding: 16,
             }}
@@ -274,7 +273,7 @@ function HomePageContent() {
                   padding: "0 16px",
                   borderRadius: 8,
                   border: 0,
-                  background: "#0ea5e9",
+                  background: "#0090B5",
                   color: "#fff",
                   cursor: "pointer",
                   opacity: !q.trim() ? 0.6 : 1,
@@ -289,8 +288,7 @@ function HomePageContent() {
           <section
             style={{
               marginTop: 18,
-              background: "#ecfeff",
-              border: "1px solid #bae6fd",
+              border: "1px solid #0090B5",
               borderRadius: 12,
               padding: 16,
             }}
@@ -329,7 +327,7 @@ function HomePageContent() {
                   padding: "0 16px",
                   borderRadius: 8,
                   border: 0,
-                  background: "#22c55e",
+                  background: "#0090B5",
                   color: "#fff",
                   cursor: "pointer",
                 }}
@@ -368,7 +366,7 @@ function HomePageContent() {
                   padding: "0 16px",
                   borderRadius: 8,
                   border: 0,
-                  background: "#0ea5e9",
+                  background: "#0090B5",
                   color: "#fff",
                   cursor: "pointer",
                   opacity: selectedDrugName ? 1 : 0.6,
@@ -389,7 +387,6 @@ function HomePageContent() {
             <section
               style={{
                 marginTop: 18,
-                background: makeAlphaColor(accentColor, "14"),
                 border: `1px solid ${accentColor}`,
                 borderRadius: 12,
                 padding: 16,

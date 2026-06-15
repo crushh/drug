@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import type { CSSProperties } from "react";
 
-const PRIMARY_COLOR = "#0f766e";
+const PRIMARY_COLOR = "#0090B5";
 
 type TargetGeneral = {
   target_id: string;
