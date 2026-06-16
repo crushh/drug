@@ -13,6 +13,7 @@ import {
   type InVitro,
 } from "@/app/components/activity-sections";
 import { getEntityCategoryColor, PRIMARY_COLOR } from "@/lib/entity-category-colors";
+import { buildAssetUrl } from "@/lib/assets";
 
 type General = {
   drug_id: string;
@@ -35,6 +36,8 @@ type Chemicals = {
   linker_name?: string | null;
   chelator_name?: string | null;
   radionuclide_name?: string | null;
+  mol2d_path?: string | null;
+  mol3d_path?: string | null;
   entities?: Record<string, Array<{ entity_id: string; name: string }>>;
 };
 
@@ -394,15 +397,61 @@ export default function DrugDetailPage({ params }: { params: { drug_id: string }
                     const imgSrc = (value as string).startsWith("http")
                       ? (value as string)
                       : `${assetBase}/structure/${value as string}.png`;
+                    const mol2dName = c?.mol2d_path ? c.mol2d_path : null;
+                    const mol3dName = c?.mol3d_path ? c.mol3d_path : null;
+                    const mol2d = buildAssetUrl(mol2dName, "rdc_2d", "cdxml");
+                    const mol3d = buildAssetUrl(mol3dName, "rdc_3d", "sdf");
                     content = (
-                      <img
-                        src={imgSrc}
-                        alt="Structure"
-                        style={{ maxWidth: "100%", maxHeight: 300, objectFit: "contain" }}
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).style.display = "none";
-                        }}
-                      />
+                      <div>
+                        <img
+                          src={imgSrc}
+                          alt="Structure"
+                          style={{ maxWidth: "100%", maxHeight: 300, objectFit: "contain", display: "block" }}
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).style.display = "none";
+                          }}
+                        />
+                        <div style={{ display: "flex", justifyContent: "center", gap: 40, flexWrap: "wrap", marginTop: 8 }}>
+                          {mol3d ? (
+                            <a
+                              href={mol3d}
+                              download
+                              style={{
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: 6,
+                                color: "#0f9e9e",
+                                fontWeight: 700,
+                                textDecoration: "none",
+                              }}
+                            >
+                              <span style={{ fontSize: 18 }}>⬇</span>
+                              <span>3D SDF</span>
+                            </a>
+                          ) : (
+                            <span style={{ color: "#94a3b8" }}>3D SDF not available</span>
+                          )}
+                          {mol2d ? (
+                            <a
+                              href={mol2d}
+                              download
+                              style={{
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: 6,
+                                color: "#0f9e9e",
+                                fontWeight: 700,
+                                textDecoration: "none",
+                              }}
+                            >
+                              <span style={{ fontSize: 18 }}>⬇</span>
+                              <span>2D MOL</span>
+                            </a>
+                          ) : (
+                            <span style={{ color: "#94a3b8" }}>2D MOL not available</span>
+                          )}
+                        </div>
+                      </div>
                     );
                   }
 

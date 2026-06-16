@@ -1,4 +1,4 @@
-﻿import { RowDataPacket } from "mysql2";
+import { RowDataPacket } from "mysql2";
 
 import { getPool } from "./db";
 import { parseExpandParam } from "./query";
@@ -419,7 +419,7 @@ async function fetchIndications(drugId: string) {
 async function buildChemicalBlock(drugId: string, allEntities: boolean) {
   const pool = getPool();
   const [rows] = await pool.query<RowDataPacket[]>(
-    `SELECT dcr.relation_role, dcr.chemical_entity_id, ce.name
+    `SELECT dcr.relation_role, dcr.chemical_entity_id, ce.name, ce.mol2d_path, ce.mol3d_path
      FROM drug_chemical_rel dcr
      JOIN chemical_entity ce ON ce.entity_id = dcr.chemical_entity_id
      WHERE dcr.drug_id = ?
@@ -443,6 +443,9 @@ async function buildChemicalBlock(drugId: string, allEntities: boolean) {
     radionuclide: [],
   };
 
+  let coldCompoundMol2d: string | null = null;
+  let coldCompoundMol3d: string | null = null;
+
   for (const row of rows) {
     const category = String(row.relation_role ?? "").toLowerCase();
     if (!ENTITY_CATEGORIES.includes(category as (typeof ENTITY_CATEGORIES)[number])) {
@@ -456,6 +459,14 @@ async function buildChemicalBlock(drugId: string, allEntities: boolean) {
       name: (row.name as string) ?? "",
       relation_role: row.relation_role as string,
     });
+    if (category === "cold_compound") {
+      if (!coldCompoundMol2d && row.mol2d_path) {
+        coldCompoundMol2d = (row.mol2d_path as string) ?? null;
+      }
+      if (!coldCompoundMol3d && row.mol3d_path) {
+        coldCompoundMol3d = (row.mol3d_path as string) ?? null;
+      }
+    }
   }
 
   const block: Record<string, unknown> = {
@@ -464,6 +475,8 @@ async function buildChemicalBlock(drugId: string, allEntities: boolean) {
     linker_name: summary.linker,
     chelator_name: summary.chelator,
     radionuclide_name: summary.radionuclide,
+    mol2d_path: coldCompoundMol2d,
+    mol3d_path: coldCompoundMol3d,
   };
 
   if (allEntities) {
