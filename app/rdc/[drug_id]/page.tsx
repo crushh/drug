@@ -15,6 +15,17 @@ import {
 import { getEntityCategoryColor, PRIMARY_COLOR } from "@/lib/entity-category-colors";
 import { buildAssetUrl } from "@/lib/assets";
 
+function getLightEntityCategoryColor(category: string) {
+  const map: Record<string, string> = {
+    cold_compound: "#dcfce7",
+    ligand: "#dbeafe",
+    linker: "#fef3c7",
+    chelator: "#ffedd5",
+    radionuclide: "#ede9fe",
+  };
+  return map[category] ?? "#e0f2fe";
+}
+
 type General = {
   drug_id: string;
   external_id: string | null;
@@ -479,41 +490,42 @@ export default function DrugDetailPage({ params }: { params: { drug_id: string }
 	                    const entityId = category ? chemicalFirstEntityId(category) : undefined;
 
 	                    if (entityId && category) {
-	                      const color = getEntityCategoryColor(category);
-	                      content = (
-	                        <div
-	                          style={{
-	                            display: "flex",
-	                            justifyContent: "space-between",
-	                            alignItems: "center",
-	                            gap: 12,
-                              minWidth: 0,
-	                          }}
-	                        >
-	                          <span style={{ minWidth: 0, overflowWrap: "anywhere" }}>{value as any}</span>
-	                          <a
-	                            href={`/chemical/${category}/${encodeURIComponent(entityId)}`}
-	                            target="_blank"
-	                            rel="noreferrer"
-	                            style={{
-	                              padding: "6px 12px",
-	                              borderRadius: 8,
-	                              textDecoration: "none",
-	                              fontSize: 14,
-	                              fontWeight: 600,
-	                              background: color,
-	                              boxShadow: "4px 3px 0 0 #565656",
-	                              color: "#fff",
-	                              display: "inline-block",
-                                flexShrink: 0,
-                                whiteSpace: "nowrap",
-	                            }}
-	                          >
-	                            {buttonLabel}
-	                          </a>
-	                        </div>
-	                      );
-	                    }
+                      const color = getEntityCategoryColor(category);
+                      const bgColor = getLightEntityCategoryColor(category);
+                      content = (
+                        <div
+                          style={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                            gap: 12,
+                            minWidth: 0,
+                          }}
+                        >
+                          <span style={{ minWidth: 0, overflowWrap: "anywhere" }}>{value as any}</span>
+                          <a
+                            href={`/chemical/${category}/${encodeURIComponent(entityId)}`}
+                            target="_blank"
+                            rel="noreferrer"
+                            style={{
+                              padding: "6px 12px",
+                              borderRadius: 8,
+                              textDecoration: "none",
+                              fontSize: 14,
+                              fontWeight: 600,
+                              background: bgColor,
+                              border: `1px solid ${color}`,
+                              color: color,
+                              display: "inline-block",
+                              flexShrink: 0,
+                              whiteSpace: "nowrap",
+                            }}
+                          >
+                            {buttonLabel}
+                          </a>
+                        </div>
+                      );
+                    }
 	                  }
 
                     if (isChebiId || isPubchemCid || isPubchemSid) {
