@@ -15,6 +15,17 @@ import {
 import { getEntityCategoryColor, PRIMARY_COLOR } from "@/lib/entity-category-colors";
 import { buildAssetUrl } from "@/lib/assets";
 
+function getLightEntityCategoryColor(category: string) {
+  const map: Record<string, string> = {
+    cold_compound: "#dcfce7",
+    ligand: "#dbeafe",
+    linker: "#fef3c7",
+    chelator: "#ffedd5",
+    radionuclide: "#ede9fe",
+  };
+  return map[category] ?? "#e0f2fe";
+}
+
 type Basic = {
   entity_category: string;
   entity_id: string;
@@ -78,11 +89,13 @@ function RelatedRdcGraph({
   basic,
   rdcs,
   mainColor,
+  lightColor,
 }: {
   entityCategory: string;
   basic: Basic | undefined;
   rdcs: RdcSummary[];
   mainColor: string;
+  lightColor: string;
 }) {
   const entityName = basic?.name || basic?.entity_id || "";
   const [openRelated, setOpenRelated] = useState(true);
@@ -203,8 +216,8 @@ function RelatedRdcGraph({
             justifyContent: "space-between",
             alignItems: "center",
             padding: "10px 12px",
-            background: mainColor,
-            color: "#fff",
+            background: lightColor,
+            color: mainColor,
             fontWeight: 700,
             cursor: "pointer",
           }}
@@ -442,6 +455,7 @@ export default function ChemicalDetailPage({
 }) {
   const { entity_category, entity_id } = params;
   const mainColor = getEntityCategoryColor(entity_category);
+  const lightColor = getLightEntityCategoryColor(entity_category);
   const isSummaryOnlyCategory =
     entity_category === "ligand" || entity_category === "chelator" || entity_category === "radionuclide";
 
@@ -581,8 +595,8 @@ export default function ChemicalDetailPage({
               justifyContent: "space-between",
               alignItems: "center",
               padding: "10px 12px",
-              background: mainColor,
-              color: "#fff",
+              background: lightColor,
+              color: mainColor,
               fontWeight: 700,
               cursor: "pointer",
             }}
@@ -783,8 +797,8 @@ export default function ChemicalDetailPage({
               justifyContent: "space-between",
               alignItems: "center",
               padding: "10px 12px",
-              background: mainColor,
-              color: "#fff",
+              background: lightColor,
+              color: mainColor,
               fontWeight: 700,
               cursor: "pointer",
             }}
@@ -819,6 +833,7 @@ export default function ChemicalDetailPage({
             basic={basic}
             rdcs={rdcList}
             mainColor={mainColor}
+            lightColor={lightColor}
           />
           <section
             style={{
@@ -836,8 +851,8 @@ export default function ChemicalDetailPage({
                 justifyContent: "space-between",
                 alignItems: "center",
                 padding: "10px 12px",
-                background: mainColor,
-                color: "#fff",
+                background: lightColor,
+                color: mainColor,
                 fontWeight: 700,
                 cursor: "pointer",
               }}
@@ -1041,6 +1056,7 @@ export default function ChemicalDetailPage({
           basic={basic}
           rdcs={rdcListData}
           mainColor={mainColor}
+          lightColor={lightColor}
         />
       )}
     </main>
