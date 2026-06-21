@@ -105,7 +105,7 @@ export default function AboutPage() {
                   The targeting ligand in RDCs serves as the crucial mediator for
                   accurately delivering radionuclides to targets on cancer cells or other
                   target cells through vectors including small molecules, peptides and
-                  antibodies (Sig Transduct Target Ther 10, 1, 2025).
+                  antibodies (<a href="https://doi.org/10.1038/s41392-024-02041-6" target="_blank" rel="noreferrer" style={{ color: PRIMARY_COLOR, textDecoration: "underline" }}>Sig Transduct Target Ther 10, 1, 2025</a>).
                 </p>
                 <p style={{ lineHeight: 1.8, color: "#374151", marginBottom: 12 }}>
                   An ideal ligand should possess suitable binding affinity and specificity
@@ -126,7 +126,7 @@ export default function AboutPage() {
                   precise whole-body lesion monitoring and noninvasive, quantitative,
                   real-time target-expression assessment. Therapeutic radionuclides, via
                   radiation energy, induce DNA single- or double-strand breaks that lead
-                  to cell death. (Theranostics 11, 7911-7947, 2021.)
+                  to cell death. (<a href="https://doi.org/10.7150/thno.56639" target="_blank" rel="noreferrer" style={{ color: PRIMARY_COLOR, textDecoration: "underline" }}>Theranostics 11, 7911-7947, 2021</a>).
                 </p>
               </section>
 
@@ -139,14 +139,13 @@ export default function AboutPage() {
                   the functional ligand, primarily functioning to sequester the
                   radionuclide and prevent its leakage. An ideal chelator exhibits strong
                   coordination ability as well as high kinetic and thermodynamic stability
-                  (Biomedicine & Pharmacotherapy, Volume 165, 2023).
+                  (<a href="https://doi.org/10.1021/cr900325h" target="_blank" rel="noreferrer" style={{ color: PRIMARY_COLOR, textDecoration: "underline" }}>Biomedicine &amp; Pharmacotherapy, Volume 165, 2023</a>).
                 </p>
                 <p style={{ lineHeight: 1.8, color: "#374151", marginBottom: 12 }}>
                   Currently, an increasing number of chelators with more novel structures
                   — based on both macrocyclic and acyclic chelating agents — are being
                   developed, which can effectively enhance chelation efficiency and ensure
-                  thermodynamic stability within the complexes (Inorg. Chem. 62,
-                  20549-20566, 2023).
+                  thermodynamic stability within the complexes (<a href="https://doi.org/10.1021/acs.inorgchem.2c03671" target="_blank" rel="noreferrer" style={{ color: PRIMARY_COLOR, textDecoration: "underline" }}>Inorg. Chem. 62, 20549-20566, 2023</a>).
                 </p>
               </section>
 
@@ -163,8 +162,7 @@ export default function AboutPage() {
                   biodistribution, tumor uptake, and tumor-to-background ratio. Linkers
                   used in RDC development can be broadly categorized into functional amino
                   acid linkers, linkers conjugated with albumin-binding moieties,
-                  hydrophilic linkers, and flexible PEG-based linkers, etc. (Seminars in
-                  Nuclear Medicine, 49, 5, 339-356, 2019).
+                  hydrophilic linkers, and flexible PEG-based linkers, etc. (<a href="https://doi.org/10.1053/j.semnuclmed.2019.07.001" target="_blank" rel="noreferrer" style={{ color: PRIMARY_COLOR, textDecoration: "underline" }}>Seminars in Nuclear Medicine, 49, 5, 339-356, 2019</a>).
                 </p>
               </section>
 
@@ -179,8 +177,7 @@ export default function AboutPage() {
                   distinct radionuclides elicits different biological
                   behaviors—including variations in chelation stability and in vivo
                   pharmacokinetics—highlighting the importance of matching the
-                  radionuclide to the chemical structure (Theranostics, 12 (1), 232-259,
-                  2022).
+                  radionuclide to the chemical structure (<a href="https://doi.org/10.7150/thno.62851" target="_blank" rel="noreferrer" style={{ color: PRIMARY_COLOR, textDecoration: "underline" }}>Theranostics, 12 (1), 232-259, 2022</a>).
                 </p>
               </section>
 
@@ -192,8 +189,7 @@ export default function AboutPage() {
                   In contrast to conventional biologics, greater emphasis is placed on
                   tumor uptake and off-target accumulation in radionuclide drug conjugates
                   (RDCs), and structural optimization is employed to suppress off-target
-                  uptake and thereby reduce off-target toxicity (Nature 630, 206-213,
-                  2024). Small-molecule ligand-based RDCs exhibit limited tumor retention
+                  uptake and thereby reduce off-target toxicity (<a href="https://doi.org/10.1038/s41586-024-07461-6" target="_blank" rel="noreferrer" style={{ color: PRIMARY_COLOR, textDecoration: "underline" }}>Nature 630, 206-213, 2024</a>). Small-molecule ligand-based RDCs exhibit limited tumor retention
                   owing to their rapid metabolic clearance, which compromises therapeutic
                   efficacy. Antibody-based RDCs, by virtue of the prolonged circulation
                   half-life of the antibody, frequently induce hematological toxicity and
@@ -223,11 +219,10 @@ export default function AboutPage() {
                   therapy integrates intrinsic theranostic capabilities with a &quot;crossfire&quot;
                   mechanism—killing cancer cells even without direct targeting—and
                   functions independently of the biological routes used for binding
-                  targets (Nat. Rev. Drug Discov. 19, 589-608, 2020). Diagnostic RDCs
+                  targets (<a href="https://doi.org/10.1038/s41573-020-0073-9" target="_blank" rel="noreferrer" style={{ color: PRIMARY_COLOR, textDecoration: "underline" }}>Nat. Rev. Drug Discov. 19, 589-608, 2020</a>). Diagnostic RDCs
                   (γ-emitters), when paired with positron emission tomography (PET) or
                   single-photon emission computed tomography (SPECT), enable non-invasive,
-                  quantitative, real-time evaluation of target expression in lesions (Nat.
-                  Med. 28, 606-608, 2022).
+                  quantitative, real-time evaluation of target expression in lesions (<a href="https://doi.org/10.1038/s41591-022-01759-6" target="_blank" rel="noreferrer" style={{ color: PRIMARY_COLOR, textDecoration: "underline" }}>Nat. Med. 28, 606-608, 2022</a>).
                 </p>
               </section>
             </div>

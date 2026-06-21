@@ -204,6 +204,24 @@ npm run upsert:csv -- --table drug_chemical_rel --csv csv_templates_normalized/d
 
 npm run upsert:csv -- --table rdc_drug --csv csv_templates_normalized/rdc_drug.csv --replace-table --apply
 
+
+# chemical_entity
+npm run upsert:csv -- --table chemical_entity --csv csv_templates_normalized/chemical_entity.csv --replace-table --apply
+
+# indication
+npm run upsert:csv -- --table indication --csv csv_templates_normalized/indication.csv --replace-table --apply
+
+# drug_indication
+npm run upsert:csv -- --table drug_indication --csv csv_templates_normalized/drug_indication.csv --replace-table --apply
+
+# reference
+npm run upsert:csv -- --table reference --csv csv_templates_normalized/reference.csv --replace-table --apply
+
+# target
+npm run upsert:csv -- --table target --csv csv_templates_normalized/target.csv --replace-table --apply
+
+
+
 npm run upsert:csv -- --table drug_target --csv csv_templates_normalized/drug_target.csv --replace-table --apply
 
 npm run upsert:csv -- --table animal_in_vivo_study --csv csv_templates_normalized/animal_in_vivo_study.csv --replace-table --apply
