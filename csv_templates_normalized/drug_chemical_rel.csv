@@ -1,4 +1,4 @@
-drug_id,chemical_entity_id,relation_role,notes,created_at,updated_at
+﻿drug_id,chemical_entity_id,relation_role,notes,created_at,updated_at
 RDC00030,RAD0008,radionuclide,,,
 RDC00031,RAD0003,radionuclide,,,
 RDC00032,RAD0024,radionuclide,,,

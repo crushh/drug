@@ -766,6 +766,7 @@ export async function getChemicalDetail(
        rotatable_bonds,
        logp,
        tpsa,
+       ligand_type,
        linker_type,
        radionuclide_symbol,
        radionuclide_half_life,
@@ -805,6 +806,7 @@ export async function getChemicalDetail(
     rotatable_bonds: toNumber(row.rotatable_bonds),
     logp: toNumber(row.logp),
     tpsa: toNumber(row.tpsa),
+    ligand_type: (row.ligand_type as string) ?? null,
     linker_type: (row.linker_type as string) ?? null,
     radionuclide_symbol: (row.radionuclide_symbol as string) ?? null,
     radionuclide_half_life: (row.radionuclide_half_life as string) ?? null,
@@ -829,6 +831,42 @@ export async function getChemicalDetail(
 
   if (drugIds.length === 0) {
     return { basic, rdc_activity: [] };
+  }
+
+  // 查询 chemical_affinity 数据（仅 ligand 和 cold_compound）
+  let affinityData: Array<{
+    affinity_id: string;
+    affinity_type: string | null;
+    affinity_symbols: string | null;
+    affinity_value: string | null;
+    affinity_unit: string | null;
+    description: string | null;
+    source: string | null;
+  }> = [];
+  if (entityCategory === "ligand" || entityCategory === "cold_compound") {
+    const [affinityRows] = await pool.query<RowDataPacket[]>(
+      `SELECT
+         affinity_id,
+         affinity_type,
+         affinity_symbols,
+         affinity_value,
+         affinity_unit,
+         description,
+         source
+       FROM chemical_affinity
+       WHERE chemical_entity_id = ?
+       ORDER BY affinity_id`,
+      [entityId]
+    );
+    affinityData = affinityRows.map((r) => ({
+      affinity_id: r.affinity_id as string,
+      affinity_type: (r.affinity_type as string) ?? null,
+      affinity_symbols: (r.affinity_symbols as string) ?? null,
+      affinity_value: (r.affinity_value as string) ?? null,
+      affinity_unit: (r.affinity_unit as string) ?? null,
+      description: (r.description as string) ?? null,
+      source: (r.source as string) ?? null,
+    }));
   }
 
   // 为每个关联的药物获取完整的活性数据
@@ -859,7 +897,7 @@ export async function getChemicalDetail(
     }
   }
 
-  return { basic, rdc_activity: rdcActivity };
+  return { basic, rdc_activity: rdcActivity, affinity: affinityData };
 }
 
 export async function getChemicalRdcList(

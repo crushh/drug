@@ -49,6 +49,7 @@ type Basic = {
   rotatable_bonds: number | null;
   logp: number | null;
   tpsa: number | null;
+  ligand_type: string | null;
   linker_type: string | null;
   radionuclide_symbol: string | null;
   radionuclide_half_life: string | null;
@@ -77,10 +78,21 @@ type RdcSummary = {
   radionuclide_name: string | null;
 };
 
+type AffinityItem = {
+  affinity_id: string;
+  affinity_type: string | null;
+  affinity_symbols: string | null;
+  affinity_value: string | null;
+  affinity_unit: string | null;
+  description: string | null;
+  source: string | null;
+};
+
 type ChemicalDetail = {
   basic?: Basic;
   rdc_activity?: RdcActivity[];
   rdcs?: RdcSummary[];
+  affinity?: AffinityItem[];
 };
 
 // Related RDCs Visualization Component
@@ -165,8 +177,16 @@ function RelatedRdcGraph({
         rows.push(
           { label: "Ligand ID", value: basic.entity_id },
           { label: "Name", value: basic.name || "-" },
+          { label: "Ligand-Type", value: basic.ligand_type || "-" },
           { label: "External ID", value: basic.external_id || "-" },
           { label: "Formula", value: basic.formula || "-" }
+        );
+        break;
+      case "linker":
+        rows.push(
+          { label: "Linker ID", value: basic.entity_id },
+          { label: "Name", value: basic.name || "-" },
+          { label: "Linker-type", value: basic.linker_type || "-" }
         );
         break;
       case "cold_compound":
@@ -465,6 +485,7 @@ export default function ChemicalDetailPage({
   const [rdcListData, setRdcListData] = useState<RdcSummary[]>([]);
   const [openBasic, setOpenBasic] = useState(true);
   const [openRdcSection, setOpenRdcSection] = useState(true);
+  const [openAffinity, setOpenAffinity] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
@@ -473,32 +494,30 @@ export default function ChemicalDetailPage({
       setError(null);
       try {
         // Fetch main detail data
-        const url = isSummaryOnlyCategory
-          ? `/api/chemical/${encodeURIComponent(entity_category)}/${encodeURIComponent(
-              entity_id
-            )}/rdc-list`
-          : `/api/chemical/${encodeURIComponent(entity_category)}/${encodeURIComponent(
-              entity_id
-            )}?include_activity=true`;
-        const res = await fetch(url, { cache: "no-store" });
-        if (!res.ok) {
-          const err = await res.json().catch(() => ({}));
-          throw new Error(err?.message || `HTTP ${res.status}`);
+        const detailUrl = `/api/chemical/${encodeURIComponent(entity_category)}/${encodeURIComponent(
+          entity_id
+        )}?include_activity=true`;
+        const detailRes = await fetch(detailUrl, { cache: "no-store" });
+        if (!detailRes.ok) {
+          const err = await detailRes.json().catch(() => ({}));
+          throw new Error(err?.message || `HTTP ${detailRes.status}`);
         }
-        const data = (await res.json()) as ChemicalDetail;
-        if (!cancelled) setDetail(data);
+        const detailData = (await detailRes.json()) as ChemicalDetail;
+        if (!cancelled) setDetail(detailData);
 
-        // For non-summary categories, also fetch rdc-list for the graph
-        if (!isSummaryOnlyCategory) {
-          const listRes = await fetch(
-            `/api/chemical/${encodeURIComponent(entity_category)}/${encodeURIComponent(
-              entity_id
-            )}/rdc-list`,
-            { cache: "no-store" }
-          );
-          if (listRes.ok) {
-            const listData = (await listRes.json()) as ChemicalDetail;
-            if (!cancelled) setRdcListData(listData.rdcs ?? []);
+        // Fetch rdc-list for graph / table
+        const listUrl = `/api/chemical/${encodeURIComponent(entity_category)}/${encodeURIComponent(
+          entity_id
+        )}/rdc-list`;
+        const listRes = await fetch(listUrl, { cache: "no-store" });
+        if (listRes.ok) {
+          const listData = (await listRes.json()) as ChemicalDetail;
+          if (!cancelled) setRdcListData(listData.rdcs ?? []);
+          // For summary-only categories, also merge rdcs into detail
+          if (isSummaryOnlyCategory && !cancelled) {
+            setDetail((prev) =>
+              prev ? { ...prev, rdcs: listData.rdcs ?? [] } : prev
+            );
           }
         }
       } catch (e: any) {
@@ -535,6 +554,12 @@ export default function ChemicalDetailPage({
     ["entity_id", basic?.entity_id ?? "-"],
     ["external_id", externalIdDisplay],
     ["name", basic?.name ?? "-"],
+    ...(entity_category === "ligand"
+      ? [["ligand_type", basic?.ligand_type ?? "-"] as [string, ReactNode]]
+      : []),
+    ...(entity_category === "linker"
+      ? [["linker_type", basic?.linker_type ?? "-"] as [string, ReactNode]]
+      : []),
     ["synonyms", basic?.synonyms ?? "-"],
   ];
 
@@ -553,7 +578,6 @@ export default function ChemicalDetailPage({
     ["rotatable_bonds", basic?.rotatable_bonds ?? "-"],
     ["logp", basic?.logp ?? "-"],
     ["tpsa", basic?.tpsa ?? "-"],
-    ["linker_type", basic?.linker_type ?? "-"],
   ];
 
   const basicRadionuclideRows: Array<[string, ReactNode]> = [
@@ -820,6 +844,163 @@ export default function ChemicalDetailPage({
               ))}
               {rdcActivity.length === 0 && (
                 <div style={{ color: "#64748b", padding: 8 }}>No RDC activity found for this chemical entity.</div>
+              )}
+            </div>
+          )}
+        </section>
+      )}
+
+      {(entity_category === "ligand" || entity_category === "cold_compound") && (
+        <section
+          style={{
+            marginTop: 16,
+            background: "#F8FAFC",
+            border: `1px solid ${mainColor}`,
+            borderRadius: 10,
+            overflow: "hidden",
+          }}
+        >
+          <div
+            onClick={() => setOpenAffinity((v) => !v)}
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              padding: "10px 12px",
+              background: lightColor,
+              color: mainColor,
+              fontWeight: 700,
+              cursor: "pointer",
+            }}
+          >
+            <span>The Activity Data of This {entity_category === "ligand" ? "Ligand" : "Cold Compound"}</span>
+            <span style={{ fontSize: 16 }}>{openAffinity ? "▾" : "▸"}</span>
+          </div>
+          {openAffinity && (
+            <div style={{ padding: 12, background: "#fff" }}>
+              {detail?.affinity && detail.affinity.length > 0 ? detail.affinity.map((item) => (
+                <div
+                  key={item.affinity_id}
+                  style={{
+                    marginBottom: 16,
+                    border: "1px solid #e5e7eb",
+                    borderRadius: 8,
+                    overflow: "hidden",
+                  }}
+                >
+                  <div
+                    style={{
+                      padding: "10px 12px",
+                      background: "#f1f5f9",
+                      fontWeight: 700,
+                      fontSize: 15,
+                      color: "#0f172a",
+                    }}
+                  >
+                    {entity_category === "ligand" ? "Ligand Activity information" : "Cold Compound Activity information"}
+                  </div>
+                  <div style={{ padding: 12 }}>
+                    <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                      <tbody>
+                        <tr>
+                          <td
+                            style={{
+                              padding: "8px 12px",
+                              width: "24%",
+                              fontWeight: 700,
+                              color: "#0f172a",
+                              fontSize: 14,
+                              borderBottom: "1px solid #e5e7eb",
+                              wordBreak: "break-word",
+                            }}
+                          >
+                            Affinity-ID
+                          </td>
+                          <td
+                            style={{
+                              padding: "8px 12px",
+                              color: "#0f172a",
+                              fontSize: 14,
+                              borderBottom: "1px solid #e5e7eb",
+                              wordBreak: "break-word",
+                            }}
+                          >
+                            {item.affinity_id}
+                          </td>
+                        </tr>
+                        <tr>
+                          <td
+                            style={{
+                              padding: "8px 12px",
+                              width: "24%",
+                              fontWeight: 700,
+                              color: "#0f172a",
+                              fontSize: 14,
+                              wordBreak: "break-word",
+                            }}
+                          >
+                            Affinity-Type
+                          </td>
+                          <td
+                            style={{
+                              padding: "8px 12px",
+                              color: "#0f172a",
+                              fontSize: 14,
+                              wordBreak: "break-word",
+                            }}
+                          >
+                            <div style={{ display: "flex", flexWrap: "wrap", gap: "16px 24px" }}>
+                              <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                                <span style={{ fontWeight: 700 }}>affinity-symbols</span>
+                                <span>{item.affinity_symbols ?? "-"}</span>
+                              </div>
+                              <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                                <span style={{ fontWeight: 700 }}>affinity_value</span>
+                                <span>{item.affinity_value ?? "-"}</span>
+                              </div>
+                              <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                                <span style={{ fontWeight: 700 }}>affinity_unit</span>
+                                <span>{item.affinity_unit ?? "-"}</span>
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                        {item.description && (
+                          <tr>
+                            <td
+                              style={{
+                                padding: "8px 12px",
+                                width: "24%",
+                                fontWeight: 700,
+                                color: "#0f172a",
+                                fontSize: 14,
+                                borderTop: "1px solid #e5e7eb",
+                                wordBreak: "break-word",
+                              }}
+                            >
+                              description
+                            </td>
+                            <td
+                              style={{
+                                padding: "8px 12px",
+                                color: "#0f172a",
+                                fontSize: 14,
+                                borderTop: "1px solid #e5e7eb",
+                                wordBreak: "break-word",
+                              }}
+                            >
+                              {item.description}
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )) : (
+                <div style={{ padding: "8px 12px", color: "#6b7280", fontSize: 14 }}>
+                  No activity data available.
+                </div>
               )}
             </div>
           )}

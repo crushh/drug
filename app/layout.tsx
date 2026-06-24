@@ -3,7 +3,7 @@ import Link from "next/link";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "RDC API",
+  title: "RDCdb：The Database of Radionuclide Drug Conjugates",
   description: "Next.js mock implementation for the Radioligand Drug Conjugates API",
 };
 
