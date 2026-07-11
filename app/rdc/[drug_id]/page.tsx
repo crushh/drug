@@ -50,6 +50,7 @@ type Chemicals = {
   mol2d_path?: string | null;
   mol3d_path?: string | null;
   entities?: Record<string, Array<{ entity_id: string; name: string }>>;
+  ligands?: Array<{ entity_id: string; name: string }>;
 };
 
 type TargetItem = {
@@ -467,66 +468,109 @@ export default function DrugDetailPage({ params }: { params: { drug_id: string }
                   }
 
                   if (isCold || isLigand || isLinker || isChelator || isRadionuclide) {
-	                    let category = "";
-	                    let buttonLabel = "";
+                      let category = "";
+                      let buttonLabel = "";
 
-	                    if (isCold) {
-	                      category = "cold_compound";
-	                      buttonLabel = "cold compound Info";
-	                    } else if (isLigand) {
-	                      category = "ligand";
-	                      buttonLabel = "ligand Info";
-	                    } else if (isLinker) {
-	                      category = "linker";
-	                      buttonLabel = "linker Info";
-	                    } else if (isChelator) {
-	                      category = "chelator";
-	                      buttonLabel = "chelator Info";
-	                    } else if (isRadionuclide) {
-	                      category = "radionuclide";
-	                      buttonLabel = "radionuclide Info";
-	                    }
+                      if (isCold) {
+                        category = "cold_compound";
+                        buttonLabel = "cold compound Info";
+                      } else if (isLigand) {
+                        category = "ligand";
+                        buttonLabel = "ligand Info";
+                      } else if (isLinker) {
+                        category = "linker";
+                        buttonLabel = "linker Info";
+                      } else if (isChelator) {
+                        category = "chelator";
+                        buttonLabel = "chelator Info";
+                      } else if (isRadionuclide) {
+                        category = "radionuclide";
+                        buttonLabel = "radionuclide Info";
+                      }
 
-	                    const entityId = category ? chemicalFirstEntityId(category) : undefined;
+                      if (isLigand && c?.ligands && c.ligands.length > 0) {
+                        const color = getEntityCategoryColor("ligand");
+                        const bgColor = getLightEntityCategoryColor("ligand");
+                        content = (
+                          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                            {c.ligands.map((lig) => (
+                              <div
+                                key={lig.entity_id}
+                                style={{
+                                  display: "flex",
+                                  justifyContent: "space-between",
+                                  alignItems: "center",
+                                  gap: 12,
+                                  minWidth: 0,
+                                }}
+                              >
+                                <span style={{ minWidth: 0, overflowWrap: "anywhere" }}>{lig.name}</span>
+                                <a
+                                  href={`/chemical/ligand/${encodeURIComponent(lig.entity_id)}`}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  style={{
+                                    padding: "6px 12px",
+                                    borderRadius: 8,
+                                    textDecoration: "none",
+                                    fontSize: 14,
+                                    fontWeight: 600,
+                                    background: bgColor,
+                                    border: `1px solid ${color}`,
+                                    color: color,
+                                    display: "inline-block",
+                                    flexShrink: 0,
+                                    whiteSpace: "nowrap",
+                                  }}
+                                >
+                                  ligand Info
+                                </a>
+                              </div>
+                            ))}
+                          </div>
+                        );
+                      } else {
+                        const entityId = category ? chemicalFirstEntityId(category) : undefined;
 
-	                    if (entityId && category) {
-                      const color = getEntityCategoryColor(category);
-                      const bgColor = getLightEntityCategoryColor(category);
-                      content = (
-                        <div
-                          style={{
-                            display: "flex",
-                            justifyContent: "space-between",
-                            alignItems: "center",
-                            gap: 12,
-                            minWidth: 0,
-                          }}
-                        >
-                          <span style={{ minWidth: 0, overflowWrap: "anywhere" }}>{value as any}</span>
-                          <a
-                            href={`/chemical/${category}/${encodeURIComponent(entityId)}`}
-                            target="_blank"
-                            rel="noreferrer"
-                            style={{
-                              padding: "6px 12px",
-                              borderRadius: 8,
-                              textDecoration: "none",
-                              fontSize: 14,
-                              fontWeight: 600,
-                              background: bgColor,
-                              border: `1px solid ${color}`,
-                              color: color,
-                              display: "inline-block",
-                              flexShrink: 0,
-                              whiteSpace: "nowrap",
-                            }}
-                          >
-                            {buttonLabel}
-                          </a>
-                        </div>
-                      );
+                        if (entityId && category) {
+                          const color = getEntityCategoryColor(category);
+                          const bgColor = getLightEntityCategoryColor(category);
+                          content = (
+                            <div
+                              style={{
+                                display: "flex",
+                                justifyContent: "space-between",
+                                alignItems: "center",
+                                gap: 12,
+                                minWidth: 0,
+                              }}
+                            >
+                              <span style={{ minWidth: 0, overflowWrap: "anywhere" }}>{value as any}</span>
+                              <a
+                                href={`/chemical/${category}/${encodeURIComponent(entityId)}`}
+                                target="_blank"
+                                rel="noreferrer"
+                                style={{
+                                  padding: "6px 12px",
+                                  borderRadius: 8,
+                                  textDecoration: "none",
+                                  fontSize: 14,
+                                  fontWeight: 600,
+                                  background: bgColor,
+                                  border: `1px solid ${color}`,
+                                  color: color,
+                                  display: "inline-block",
+                                  flexShrink: 0,
+                                  whiteSpace: "nowrap",
+                                }}
+                              >
+                                {buttonLabel}
+                              </a>
+                            </div>
+                          );
+                        }
+                      }
                     }
-	                  }
 
                     if (isChebiId || isPubchemCid || isPubchemSid) {
                       const idValue = typeof value === "string" ? value.trim() : "";

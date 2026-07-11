@@ -950,6 +950,7 @@ export default function ChemicalDetailPage({
                             }}
                           >
                             <div style={{ display: "flex", flexWrap: "wrap", gap: "16px 24px" }}>
+                              <span>{item.affinity_type ?? "-"}</span>
                               <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
                                 <span style={{ fontWeight: 700 }}>affinity-symbols</span>
                                 <span>{item.affinity_symbols ?? "-"}</span>
@@ -1038,7 +1039,7 @@ export default function ChemicalDetailPage({
                 cursor: "pointer",
               }}
             >
-              <span>Complete List of RDCs Related to This Target</span>
+              <span>Complete List of RDCs Related to This {entity_category.charAt(0).toUpperCase() + entity_category.slice(1)}</span>
               <span style={{ fontSize: 16 }}>{openRdcSection ? "▾" : "▸"}</span>
             </div>
 

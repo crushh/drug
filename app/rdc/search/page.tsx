@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { getEntityCategoryColor, PRIMARY_COLOR } from "@/lib/entity-category-colors";
 
 function getLightEntityCategoryColor(category: string) {
@@ -24,6 +24,8 @@ type SearchItem = {
   linker_name: string | null;
   chelator_name: string | null;
   radionuclide_name: string | null;
+  ligand_ids?: string[];
+  ligand_names?: string[];
 };
 
 type DetailResponse = {
@@ -198,25 +200,50 @@ export default function SearchListPage({
                   cold compound Info
                 </a>
 
-                <div>ligand Name： {it.ligand_name ?? "-"}</div>
-                <a
-                  href={(() => {
-                    const id = chemicalFirstEntityId(it.drug_id, "ligand");
-                    return id ? `/chemical/ligand/${id}` : "#";
-                  })()}
-                  target="_blank"
-                  style={{
-                    padding: "6px 12px",
-                    background: getLightEntityCategoryColor("ligand"),
-                    border: "1px solid " + getEntityCategoryColor("ligand"),
-                    borderRadius: 8,
-                    textDecoration: "none",
-                    color: getEntityCategoryColor("ligand"),
-                    fontWeight: 600,
-                  }}
-                >
-                  ligand Info
-                </a>
+                {it.ligand_names && it.ligand_names.length > 0 ? (
+                  it.ligand_names.map((name, idx) => (
+                    <React.Fragment key={idx}>
+                      <div>ligand Name： {name}</div>
+                      <a
+                        href={it.ligand_ids?.[idx] ? `/chemical/ligand/${it.ligand_ids[idx]}` : "#"}
+                        target="_blank"
+                        style={{
+                          padding: "6px 12px",
+                          background: getLightEntityCategoryColor("ligand"),
+                          border: "1px solid " + getEntityCategoryColor("ligand"),
+                          borderRadius: 8,
+                          textDecoration: "none",
+                          color: getEntityCategoryColor("ligand"),
+                          fontWeight: 600,
+                        }}
+                      >
+                        ligand Info
+                      </a>
+                    </React.Fragment>
+                  ))
+                ) : (
+                  <>
+                    <div>ligand Name： {it.ligand_name ?? "-"}</div>
+                    <a
+                      href={(() => {
+                        const id = chemicalFirstEntityId(it.drug_id, "ligand");
+                        return id ? `/chemical/ligand/${id}` : "#";
+                      })()}
+                      target="_blank"
+                      style={{
+                        padding: "6px 12px",
+                        background: getLightEntityCategoryColor("ligand"),
+                        border: "1px solid " + getEntityCategoryColor("ligand"),
+                        borderRadius: 8,
+                        textDecoration: "none",
+                        color: getEntityCategoryColor("ligand"),
+                        fontWeight: 600,
+                      }}
+                    >
+                      ligand Info
+                    </a>
+                  </>
+                )}
 
                 <div>linker Name： {it.linker_name ?? "-"}</div>
                 <a

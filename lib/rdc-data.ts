@@ -105,7 +105,9 @@ export async function searchDrugs({ q, limit = 20 }: { q: string; limit?: number
        MAX(CASE WHEN dcr.relation_role = 'ligand' THEN ce.name END) AS ligand_name,
        MAX(CASE WHEN dcr.relation_role = 'linker' THEN ce.name END) AS linker_name,
        MAX(CASE WHEN dcr.relation_role = 'chelator' THEN ce.name END) AS chelator_name,
-       MAX(CASE WHEN dcr.relation_role = 'radionuclide' THEN ce.name END) AS radionuclide_name
+       MAX(CASE WHEN dcr.relation_role = 'radionuclide' THEN ce.name END) AS radionuclide_name,
+       GROUP_CONCAT(DISTINCT CASE WHEN dcr.relation_role = 'ligand' THEN ce.entity_id END ORDER BY ce.entity_id SEPARATOR '|') AS ligand_ids,
+       GROUP_CONCAT(DISTINCT CASE WHEN dcr.relation_role = 'ligand' THEN ce.name END ORDER BY ce.name SEPARATOR '|') AS ligand_names
      FROM rdc_drug d
      LEFT JOIN drug_chemical_rel dcr ON d.drug_id = dcr.drug_id
      LEFT JOIN chemical_entity ce ON ce.entity_id = dcr.chemical_entity_id
@@ -115,7 +117,7 @@ export async function searchDrugs({ q, limit = 20 }: { q: string; limit?: number
      LIMIT ?`,
     [query, safeLimit]
   );
-  
+
   return rows.map((row) => ({
     drug_id: row.drug_id as string,
     drug_name: row.drug_name as string,
@@ -126,6 +128,8 @@ export async function searchDrugs({ q, limit = 20 }: { q: string; limit?: number
     linker_name: (row.linker_name as string) ?? null,
     chelator_name: (row.chelator_name as string) ?? null,
     radionuclide_name: (row.radionuclide_name as string) ?? null,
+    ligand_ids: row.ligand_ids ? String(row.ligand_ids).split('|') : [],
+    ligand_names: row.ligand_names ? String(row.ligand_names).split('|') : [],
   }));
 }
 
@@ -191,6 +195,8 @@ export async function listDrugs(params: ListDrugsParams) {
        MAX(CASE WHEN dcr.relation_role = 'linker' THEN ce.name END) AS linker_name,
        MAX(CASE WHEN dcr.relation_role = 'chelator' THEN ce.name END) AS chelator_name,
        MAX(CASE WHEN dcr.relation_role = 'radionuclide' THEN ce.name END) AS radionuclide_name,
+       GROUP_CONCAT(DISTINCT CASE WHEN dcr.relation_role = 'ligand' THEN ce.entity_id END ORDER BY ce.entity_id SEPARATOR '|') AS ligand_ids,
+       GROUP_CONCAT(DISTINCT CASE WHEN dcr.relation_role = 'ligand' THEN ce.name END ORDER BY ce.name SEPARATOR '|') AS ligand_names,
        d.created_at
      FROM rdc_drug d
      LEFT JOIN drug_chemical_rel dcr ON d.drug_id = dcr.drug_id
@@ -220,6 +226,8 @@ export async function listDrugs(params: ListDrugsParams) {
       linker_name: (row.linker_name as string) ?? null,
       chelator_name: (row.chelator_name as string) ?? null,
       radionuclide_name: (row.radionuclide_name as string) ?? null,
+      ligand_ids: row.ligand_ids ? String(row.ligand_ids).split('|') : [],
+      ligand_names: row.ligand_names ? String(row.ligand_names).split('|') : [],
       created_at: toDateTime(row.created_at),
     })),
     page: safePage,
@@ -477,6 +485,7 @@ async function buildChemicalBlock(drugId: string, allEntities: boolean) {
     radionuclide_name: summary.radionuclide,
     mol2d_path: coldCompoundMol2d,
     mol3d_path: coldCompoundMol3d,
+    ligands: grouped.ligand,
   };
 
   if (allEntities) {
